@@ -32,7 +32,7 @@ export const GET = withAuth(async (req: NextRequest) => {
     },
       {
         headers: {
-          "Cache-Control": "s-maxage=600, stale-while-revalidate=120",
+          "Cache-Control": "s-maxage=600, stale-while-revalidate=180",
         },
       }
     );

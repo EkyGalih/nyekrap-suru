@@ -36,7 +36,7 @@ export const GET = withAuth(async () => {
         },
             {
                 headers: {
-                    "Cache-Control": "s-maxage=600, stale-while-revalidate=120",
+                    "Cache-Control": "s-maxage=600, stale-while-revalidate=300",
                 },
             }
         );
