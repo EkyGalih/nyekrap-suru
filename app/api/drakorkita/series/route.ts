@@ -1,20 +1,17 @@
-import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
-import { headers } from "@/src/lib/headers";
 import { scrapeSeries } from "@/src/lib/scrapers/drakorkita";
 import { getErrorMessage } from "@/src/lib/getErrorMessage";
 import { withAuth } from "@/src/lib/withAuth";
+import { proxyFetchHTML } from "@/src/lib/proxyFetch";
 
 export const GET = withAuth(async (req: NextRequest) => {
   try {
     const page = req.nextUrl.searchParams.get("page") || "1";
 
-    const axiosRequest = await axios.get(
-      `${process.env.DRAKORKITA_URL}/all?media_type=tv&page=${page}`,
-      { headers }
-    );
+    const url = `${process.env.DRAKORKITA_URL}/all?media_type=tv&page=${page}`;
+    const html = await proxyFetchHTML(url);
 
-    const datas = await scrapeSeries(axiosRequest);
+    const datas = await scrapeSeries({ data: html } as any);
 
     const totalPage = datas.pagination;
     const currentPage = parseInt(page);
@@ -32,7 +29,13 @@ export const GET = withAuth(async (req: NextRequest) => {
         next_page: currentPage < totalPage ? currentPage + 1 : null,
         prev_page: currentPage > 1 ? currentPage - 1 : null,
       },
-    });
+    },
+      {
+        headers: {
+          "Cache-Control": "s-maxage=600, stale-while-revalidate=120",
+        },
+      }
+    );
   } catch (error: unknown) {
     return NextResponse.json(
       { message: "error", error: getErrorMessage(error) },
