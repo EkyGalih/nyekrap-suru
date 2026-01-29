@@ -72,20 +72,20 @@ export interface DetailParams {
 /* ==============================
    SEARCH PARAM TYPE
 ============================== */
-export interface SearchItem {
+export interface SearchDramaCard {
   title: string;
-  time: string;
-  quality: string;
-  updated_at: string;
-  eps: string;
-  rating: string;
-  thumbnail?: string;
+  time: string | null;
+  quality: string | null;
+  updated_at: string | null;
+  eps: string | null;
+  rating: string | null;
+  thumbnail: string | null;
   endpoint: string | null;
 }
 
-export interface SearchResult {
+export interface SearchDramaResult {
   pagination: number;
-  datas: SearchItem[];
+  datas: SearchDramaCard[];
 }
 
 /* ==============================
