@@ -1,6 +1,30 @@
 import { load } from "cheerio";
 import axios, { AxiosResponse } from "axios";
-import { CompletedSeriesCard, CompletedSeriesResult, DetailParams, DrakorDetailInfo, DrakorDetailResult, DrakorSeries, DrakorStar, EpisodeItem, EpisodeResolution, FilterOption, GenreDetailCard, GenreDetailResult, GenreItem, HomeResult, LatestItem, MovieItem, MovieResult, OngoingSeriesResult, SearchDramaCard, SearchDramaResult, SearchItem, SearchResult, SeriesCard, SeriesResult, SidebarItem } from "@/app/types/drakor/drama";
+import {
+    CompletedSeriesCard,
+    CompletedSeriesResult,
+    DetailParams,
+    DrakorDetailInfo,
+    DrakorDetailResult,
+    DrakorSeries,
+    DrakorStar,
+    EpisodeItem,
+    EpisodeResolution,
+    FilterOption,
+    GenreDetailCard,
+    GenreDetailResult,
+    GenreItem,
+    HomeResult,
+    LatestItem,
+    MovieItem,
+    MovieResult,
+    OngoingSeriesResult,
+    SearchDramaCard,
+    SearchDramaResult,
+    SeriesCard,
+    SeriesResult,
+    SidebarItem
+} from "@/app/types/drakor/drama";
 import { extractEndpoint, extractYear } from "../helpers/helpers";
 
 export async function scrapeHomePage(
@@ -691,84 +715,84 @@ export async function scrapeDetailGenres(
 }
 
 export async function scrapeSearch(
-  res: AxiosResponse<string>
+    res: AxiosResponse<string>
 ): Promise<SearchDramaResult> {
-  const $ = load(res.data);
+    const $ = load(res.data);
 
-  const datas: SearchDramaCard[] = [];
-  const pages: number[] = [];
+    const datas: SearchDramaCard[] = [];
+    const pages: number[] = [];
 
-  /* ===============================
-     CARD LIST SCRAPING
-  ============================== */
+    /* ===============================
+       CARD LIST SCRAPING
+    ============================== */
 
-  $(".row.item-list .card").each((_, el) => {
-    const element = $(el);
+    $(".row.item-list .card").each((_, el) => {
+        const element = $(el);
 
-    // Title
-    const title =
-      element
-        .find("span.titit")
-        .clone()
-        .children()
-        .remove()
-        .end()
-        .text()
-        .trim() || "";
+        // Title
+        const title =
+            element
+                .find("span.titit")
+                .clone()
+                .children()
+                .remove()
+                .end()
+                .text()
+                .trim() || "";
 
-    // Duration
-    const time = element.find("span.type").text().trim() || null;
+        // Duration
+        const time = element.find("span.type").text().trim() || null;
 
-    // Quality
-    const quality =
-      element.find("span.titit span").first().text().trim() || null;
+        // Quality
+        const quality =
+            element.find("span.titit span").first().text().trim() || null;
 
-    // Updated At
-    const updated_at =
-      element.find("span.titit span").last().text().trim() || null;
+        // Updated At
+        const updated_at =
+            element.find("span.titit span").last().text().trim() || null;
 
-    // Episode
-    const eps =
-      element.find("span.tagw span.qua").text().trim() || null;
+        // Episode
+        const eps =
+            element.find("span.tagw span.qua").text().trim() || null;
 
-    // Rating
-    const ratingRaw = element.find("span.rat").text().trim();
-    const rating = ratingRaw ? ratingRaw.replace("★", "").trim() : null;
+        // Rating
+        const ratingRaw = element.find("span.rat").text().trim();
+        const rating = ratingRaw ? ratingRaw.replace("★", "").trim() : null;
 
-    // Thumbnail
-    const thumbnail = element.find("img.poster").attr("src") ?? null;
+        // Thumbnail
+        const thumbnail = element.find("img.poster").attr("src") ?? null;
 
-    // Endpoint
-    const href = element.find("a.poster").attr("href") ?? "";
-    const endpoint = href ? extractEndpoint(href) : null;
+        // Endpoint
+        const href = element.find("a.poster").attr("href") ?? "";
+        const endpoint = href ? extractEndpoint(href) : null;
 
-    datas.push({
-      title,
-      time,
-      quality,
-      updated_at,
-      eps,
-      rating,
-      thumbnail,
-      endpoint,
+        datas.push({
+            title,
+            time,
+            quality,
+            updated_at,
+            eps,
+            rating,
+            thumbnail,
+            endpoint,
+        });
     });
-  });
 
-  /* ===============================
-     PAGINATION SCRAPING
-  ============================== */
+    /* ===============================
+       PAGINATION SCRAPING
+    ============================== */
 
-  $(".wp-pagenavi a, .wp-pagenavi span").each((_, el) => {
-    const num = parseInt($(el).text().trim(), 10);
-    if (!isNaN(num)) pages.push(num);
-  });
+    $(".wp-pagenavi a, .wp-pagenavi span").each((_, el) => {
+        const num = parseInt($(el).text().trim(), 10);
+        if (!isNaN(num)) pages.push(num);
+    });
 
-  const pagination = pages.length > 0 ? Math.max(...pages) : 1;
+    const pagination = pages.length > 0 ? Math.max(...pages) : 1;
 
-  return {
-    pagination,
-    datas,
-  };
+    return {
+        pagination,
+        datas,
+    };
 }
 
 export async function scrapeDetailAllType(
