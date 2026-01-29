@@ -28,8 +28,14 @@ export const GET = withAuth(async (_req: NextRequest) => {
       message: "success",
       data: result,
     });
-  } catch (err) {
+  } catch (err: unknown) {
     console.error("HOMEPAGE ERROR:", err);
+
+    // ✅ Debug khusus axios
+    if (axios.isAxiosError(err)) {
+      console.log("AXIOS STATUS:", err.response?.status);
+      console.log("AXIOS DATA:", err.response?.data);
+    }
 
     return NextResponse.json(
       {
