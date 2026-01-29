@@ -33,7 +33,13 @@ export const GET = withAuth(async () => {
             message: "success",
             total: datas.length,
             datas,
-        });
+        },
+            {
+                headers: {
+                    "Cache-Control": "s-maxage=600, stale-while-revalidate=120",
+                },
+            }
+        );
     } catch (err: unknown) {
         return NextResponse.json(
             {

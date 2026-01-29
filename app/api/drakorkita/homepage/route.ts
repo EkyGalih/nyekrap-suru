@@ -21,7 +21,13 @@ export const GET = withAuth(async () => {
     return NextResponse.json({
       message: "success",
       data: result,
-    });
+    },
+      {
+        headers: {
+          "Cache-Control": "s-maxage=600, stale-while-revalidate=120",
+        },
+      }
+    );
   } catch (err: unknown) {
     return NextResponse.json(
       {

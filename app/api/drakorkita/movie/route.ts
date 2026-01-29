@@ -1,9 +1,8 @@
-import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
 
-import { headers } from "@/src/lib/headers";
 import { scrapeMovie } from "@/src/lib/scrapers/drakorkita";
 import { withAuth } from "@/src/lib/withAuth";
+import { proxyFetchHTML } from "@/src/lib/proxyFetch";
 
 /* ===============================
    GET ALL MOVIES
@@ -20,15 +19,13 @@ export const GET = withAuth(async (req: NextRequest) => {
         // ===============================
         // Request ke Drakorkita
         // ===============================
-        const response = await axios.get<string>(
-            `${process.env.DRAKORKITA_URL}/all?media_type=movie&page=${page}`,
-            { headers }
-        );
+        const url = `${process.env.DRAKORKITA_URL}/all?media_type=movie&page=${page}`;
+        const html = await proxyFetchHTML(url);
 
         // ===============================
         // Scrape Result
         // ===============================
-        const result = await scrapeMovie(response);
+        const result = await scrapeMovie({ data: html } as any);
 
         // ===============================
         // Response API
@@ -48,7 +45,13 @@ export const GET = withAuth(async (req: NextRequest) => {
                 next_page: currentPage < result.pagination ? currentPage + 1 : null,
                 prev_page: currentPage > 1 ? currentPage - 1 : null,
             },
-        });
+        },
+            {
+                headers: {
+                    "Cache-Control": "s-maxage=600, stale-while-revalidate=120",
+                },
+            }
+        );
     } catch (err: unknown) {
         return NextResponse.json(
             {
