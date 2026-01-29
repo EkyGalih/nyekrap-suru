@@ -50,16 +50,6 @@ export const swaggerSpec = {
                     "Mengambil daftar drama terbaru yang tampil di halaman utama Drakorkita.",
 
                 parameters: [
-                    {
-                        name: "page",
-                        in: "query",
-                        required: false,
-                        description: "Nomor halaman pagination",
-                        schema: {
-                            type: "integer",
-                            example: 1,
-                        },
-                    },
                 ],
 
                 responses: {

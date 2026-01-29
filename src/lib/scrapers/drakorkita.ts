@@ -26,6 +26,7 @@ import {
     SidebarItem
 } from "@/app/types/drakor/drama";
 import { extractEndpoint, extractYear } from "../helpers/helpers";
+export const runtime = "nodejs";
 
 export async function scrapeHomePage(
     res: AxiosResponse<string>

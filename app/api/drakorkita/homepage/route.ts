@@ -5,19 +5,38 @@ import { headers } from "@/src/lib/headers";
 import { scrapeHomePage } from "@/src/lib/scrapers/drakorkita";
 import { withAuth } from "@/src/lib/withAuth";
 
-export const GET = withAuth(async (req: NextRequest) => {
-  const page = req.nextUrl.searchParams.get("page") ?? "1";
+export const runtime = "nodejs";
 
-  const response = await axios.get<string>(
-    `${process.env.DRAKORKITA_URL}/page/${page}`,
-    { headers }
-  );
+export const GET = withAuth(async (_req: NextRequest) => {
+  try {
+    if (!process.env.DRAKORKITA_URL) {
+      throw new Error("DRAKORKITA_URL belum diset di ENV");
+    }
 
-  const result = await scrapeHomePage(response);
+    const url = `${process.env.DRAKORKITA_URL}/`;
 
-  return NextResponse.json({
-    message: "success",
-    page: Number(page),
-    data: result,
-  });
+    console.log("FETCH HOMEPAGE:", url);
+
+    const response = await axios.get<string>(url, {
+      headers,
+      timeout: 10000,
+    });
+
+    const result = await scrapeHomePage(response);
+
+    return NextResponse.json({
+      message: "success",
+      data: result,
+    });
+  } catch (err) {
+    console.error("HOMEPAGE ERROR:", err);
+
+    return NextResponse.json(
+      {
+        message: "error",
+        error: err instanceof Error ? err.message : "Unknown error",
+      },
+      { status: 500 }
+    );
+  }
 });
