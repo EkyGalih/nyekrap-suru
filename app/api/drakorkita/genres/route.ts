@@ -1,9 +1,8 @@
-import axios from "axios";
 import { NextResponse } from "next/server";
 
-import { headers } from "@/src/lib/headers";
-import { scrapeGenres } from "@/src/lib/scrapers/drakorkita";
 import { withAuth } from "@/src/lib/withAuth";
+import { proxyFetchHTML } from "@/src/lib/proxyFetch";
+import { scrapeGenres } from "@/src/lib/scrapers/drakorkita";
 
 /* ===============================
    GET ALL GENRES
@@ -11,20 +10,24 @@ import { withAuth } from "@/src/lib/withAuth";
    /api/drakorkita/genres
 ================================ */
 
+export const runtime = "nodejs";
+
 export const GET = withAuth(async () => {
     try {
         // ===============================
-        // Request ke Drakorkita
+        // Target URL Drakorkita
         // ===============================
-        const response = await axios.get<string>(
-            `${process.env.DRAKORKITA_URL}/all`,
-            { headers }
-        );
+        const url = `${process.env.DRAKORKITA_URL}/all`;
+
+        // ===============================
+        // Fetch HTML via Proxy Fallback
+        // ===============================
+        const html = await proxyFetchHTML(url);
 
         // ===============================
         // Scrape Genre List
         // ===============================
-        const datas = await scrapeGenres(response);
+        const datas = await scrapeGenres({ data: html } as any);
 
         return NextResponse.json({
             message: "success",
