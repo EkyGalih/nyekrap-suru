@@ -1,5 +1,20 @@
 export const swaggerSpec = {
     openapi: "3.0.0",
+    components: {
+        securitySchemes: {
+            ApiKeyAuth: {
+                type: "apiKey",
+                in: "header",
+                name: "x-api-key",
+            },
+        },
+    },
+
+    security: [
+        {
+            ApiKeyAuth: [],
+        },
+    ],
 
     info: {
         title: "Drakor Scraping API",
