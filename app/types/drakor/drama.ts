@@ -1,7 +1,6 @@
 export interface DrakorSeries {
   title: string;
-  year: string | null;
-  time: string;
+  duration: string | null;
   eps: string | null;
   rating: string | null;
   resolution: string | null;
