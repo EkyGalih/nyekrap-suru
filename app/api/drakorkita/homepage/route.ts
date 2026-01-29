@@ -29,17 +29,26 @@ export const GET = withAuth(async (_req: NextRequest) => {
       data: result,
     });
   } catch (err: unknown) {
-    console.error("HOMEPAGE ERROR:", err);
 
-    // ✅ Debug khusus axios
     if (axios.isAxiosError(err)) {
-      console.log("AXIOS STATUS:", err.response?.status);
-      console.log("AXIOS DATA:", err.response?.data);
+      return NextResponse.json(
+        {
+          message: "axios error",
+          status: err.response?.status,
+          target_url: err.config?.url,
+          headers_sent: err.config?.headers,
+          response_preview:
+            typeof err.response?.data === "string"
+              ? err.response.data.slice(0, 300)
+              : err.response?.data,
+        },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json(
       {
-        message: "error",
+        message: "unknown error",
         error: err instanceof Error ? err.message : "Unknown error",
       },
       { status: 500 }
