@@ -1,23 +1,44 @@
-import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
 
-import { headers } from "@/src/lib/headers";
-import { scrapeHomePage } from "@/src/lib/scrapers/drakorkita";
 import { withAuth } from "@/src/lib/withAuth";
+import { proxyFetchHTML } from "@/src/lib/proxyFetch";
+import { jsonCache } from "@/src/lib/jsonCache";
 
-export const GET = withAuth(async (req: NextRequest) => {
-    const page = req.nextUrl.searchParams.get("page") ?? "1";
+import { scrapeDetailAllType } from "@/src/lib/scrapers/drakorkita";
 
-    const response = await axios.get<string>(
-        `${process.env.DRAKORKITA_URL}/page/${page}`,
-        { headers }
-    );
+export const runtime = "nodejs";
 
-    const result = await scrapeHomePage(response);
+export const GET = withAuth(
+    async (
+        _req: NextRequest,
+        { params }: { params: Promise<{ endpoint: string }> }
+    ) => {
+        try {
+            const { endpoint } = await params;
 
-    return NextResponse.json({
-        message: "success",
-        page: Number(page),
-        data: result,
-    });
-});
+            const url = `${process.env.DRAKORKITA_URL}/detail/${endpoint}`;
+
+            // ✅ Fetch HTML via Proxy
+            const html = await proxyFetchHTML(url);
+
+            // ✅ Scrape detail from HTML string
+            const data = await scrapeDetailAllType(endpoint, html);
+
+            return jsonCache(
+                {
+                    message: "success",
+                    data,
+                },
+                600
+            );
+        } catch (err: unknown) {
+            return NextResponse.json(
+                {
+                    message: "error",
+                    error: err instanceof Error ? err.message : "Unknown error",
+                },
+                { status: 500 }
+            );
+        }
+    }
+);

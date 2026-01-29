@@ -1,38 +1,45 @@
 import { NextResponse } from "next/server";
-import { withAuth } from "@/src/lib/withAuth";
 
+import { withAuth } from "@/src/lib/withAuth";
 import { proxyFetchHTML } from "@/src/lib/proxyFetch";
 import { scrapeHomePage } from "@/src/lib/scrapers/drakorkita";
+import { getErrorMessage } from "@/src/lib/getErrorMessage";
+import { jsonCache } from "@/src/lib/jsonCache";
 
 export const runtime = "nodejs";
 
 export const GET = withAuth(async () => {
   try {
+    // ===============================
+    // Target Homepage URL
+    // ===============================
     const targetUrl = `${process.env.DRAKORKITA_URL}/`;
 
-    // ✅ ambil html lewat proxy fallback
+    // ===============================
+    // Fetch HTML via Proxy Fallback
+    // ===============================
     const html = await proxyFetchHTML(targetUrl);
 
-    // ✅ scrape langsung dari HTML string
-    const result = await scrapeHomePage({
-      data: html,
-    } as any);
+    // ===============================
+    // Scrape Homepage (HTML string)
+    // ===============================
+    const result = scrapeHomePage(html);
 
-    return NextResponse.json({
-      message: "success",
-      data: result,
-    },
+    // ===============================
+    // Return Cached JSON
+    // ===============================
+    return jsonCache(
       {
-        headers: {
-          "Cache-Control": "s-maxage=600, stale-while-revalidate=120",
-        },
-      }
+        message: "success",
+        data: result,
+      },
+      300 // cache 5 menit
     );
   } catch (err: unknown) {
     return NextResponse.json(
       {
         message: "error",
-        error: err instanceof Error ? err.message : "Unknown error",
+        error: getErrorMessage(err),
       },
       { status: 500 }
     );

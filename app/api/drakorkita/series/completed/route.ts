@@ -1,26 +1,53 @@
-import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
 
-import { headers } from "@/src/lib/headers";
-import { scrapeCompletedSeries } from "@/src/lib/scrapers/drakorkita";
 import { withAuth } from "@/src/lib/withAuth";
+import { proxyFetchHTML } from "@/src/lib/proxyFetch";
+import { jsonCache } from "@/src/lib/jsonCache";
+
+import { scrapeCompletedSeries } from "@/src/lib/scrapers/drakorkita";
+
+export const runtime = "nodejs";
+
+/* ===============================
+   GET COMPLETED SERIES
+   Example:
+   /api/drakorkita/series/completed?page=1
+================================ */
 
 export const GET = withAuth(async (req: NextRequest) => {
     try {
         const page = req.nextUrl.searchParams.get("page") ?? "1";
+        const currentPage = Number(page);
 
-        const response = await axios.get<string>(
-            `${process.env.DRAKORKITA_URL}/all?page=${page}&status=ended`,
-            { headers }
+        const url = `${process.env.DRAKORKITA_URL}/all?page=${page}&status=ended`;
+
+        // ✅ Fetch HTML via Proxy
+        const html = await proxyFetchHTML(url);
+
+        // ✅ Scrape langsung dari HTML string
+        const result = scrapeCompletedSeries(html);
+
+        // ✅ Cache Response (Revalidate 5 menit)
+        return jsonCache(
+            {
+                message: "success",
+                page: currentPage,
+                pagination: result.pagination,
+                total: result.datas.length,
+                datas: result.datas,
+
+                pagination_info: {
+                    current_page: currentPage,
+                    total_page: result.pagination,
+                    has_next: currentPage < result.pagination,
+                    has_prev: currentPage > 1,
+                    next_page:
+                        currentPage < result.pagination ? currentPage + 1 : null,
+                    prev_page: currentPage > 1 ? currentPage - 1 : null,
+                },
+            },
+            300
         );
-
-        const data = await scrapeCompletedSeries(response);
-
-        return NextResponse.json({
-            message: "success",
-            page: Number(page),
-            ...data,
-        });
     } catch (err: unknown) {
         return NextResponse.json(
             {

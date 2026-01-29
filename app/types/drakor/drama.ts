@@ -2,11 +2,11 @@ export interface DrakorSeries {
   title: string;
   year: string | null;
   time: string;
-  eps: string;
+  eps: string | null;
   rating: string | null;
-  resolution: string;
-  updated_at: string;
-  thumbnail?: string;
+  resolution: string | null;
+  updated_at: string | null;
+  thumbnail?: string | null;
   endpoint: string | null;
 }
 
@@ -44,7 +44,7 @@ export interface DrakorDetailResult {
   title: string;
   title_alt: string;
   synopsis: string;
-  thumbnail?: string;
+  thumbnail?: string | null;
 
   genres: string[];
 
@@ -94,12 +94,12 @@ export interface SearchDramaResult {
 export interface MovieItem {
   title: string;
   year: string | null;
-  duration: string;
-  resolution: string;
-  updated_at: string;
+  duration: string | null;
+  resolution: string | null;
+  updated_at: string | null;
   rating: string | null;
   tag: string | null;
-  thumbnail?: string;
+  thumbnail?: string | null;
   endpoint: string;
 }
 
@@ -220,7 +220,7 @@ export interface GenreDetailCard {
   title: string;
   endpoint: string;
   duration: string | null;
-  quality: string | null;
+  resolution: string | null;
   updated_at: string | null;
   eps: string | null;
   rating: string | null;

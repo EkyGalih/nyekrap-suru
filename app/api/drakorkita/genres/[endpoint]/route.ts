@@ -1,9 +1,12 @@
-import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
 
-import { headers } from "@/src/lib/headers";
-import { scrapeDetailGenres } from "@/src/lib/scrapers/drakorkita";
 import { withAuth } from "@/src/lib/withAuth";
+import { proxyFetchHTML } from "@/src/lib/proxyFetch";
+import { scrapeDetailGenres } from "@/src/lib/scrapers/drakorkita";
+import { jsonCache } from "@/src/lib/jsonCache";
+import { getErrorMessage } from "@/src/lib/getErrorMessage";
+
+export const runtime = "nodejs";
 
 /* ===============================
    GET DRAMA BY GENRE
@@ -17,15 +20,14 @@ export const GET = withAuth(
         { params }: { params: Promise<{ endpoint: string }> }
     ) => {
         try {
-            // ✅ unwrap params (Next.js 16 fix)
+            // ✅ unwrap params
             const { endpoint } = await params;
 
-            // ✅ page query
+            // ✅ query page
             const page = req.nextUrl.searchParams.get("page") ?? "1";
 
             // ===============================
             // Genre Normalization
-            // Website butuh format Capitalized
             // history → History
             // action-drama → Action Drama
             // ===============================
@@ -35,37 +37,41 @@ export const GET = withAuth(
                 .join(" ");
 
             // ===============================
-            // Build URL
+            // Build Target URL
             // ===============================
             const url = `${process.env.DRAKORKITA_URL}/all?genre=${encodeURIComponent(
                 genre
             )}&page=${page}`;
 
-            console.log("FETCH GENRE URL:", url);
+            // ===============================
+            // Fetch HTML via Proxy
+            // ===============================
+            const html = await proxyFetchHTML(url);
 
             // ===============================
-            // Request ke Drakorkita
+            // Scrape Result from HTML
             // ===============================
-            const response = await axios.get<string>(url, { headers });
+            const result = scrapeDetailGenres(html);
 
             // ===============================
-            // Scrape Result
+            // Return Cached JSON (5 min)
             // ===============================
-            const result = await scrapeDetailGenres(response);
-
-            return NextResponse.json({
-                message: "success",
-                genre,
-                page: Number(page),
-                pagination: result.pagination,
-                total: result.datas.length,
-                datas: result.datas,
-            });
+            return jsonCache(
+                {
+                    message: "success",
+                    genre,
+                    page: Number(page),
+                    pagination: result.pagination,
+                    total: result.datas.length,
+                    datas: result.datas,
+                },
+                300
+            );
         } catch (err: unknown) {
             return NextResponse.json(
                 {
                     message: "error",
-                    error: err instanceof Error ? err.message : "Unknown error",
+                    error: getErrorMessage(err),
                 },
                 { status: 500 }
             );

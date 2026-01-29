@@ -3,12 +3,8 @@ import { NextResponse } from "next/server";
 import { withAuth } from "@/src/lib/withAuth";
 import { proxyFetchHTML } from "@/src/lib/proxyFetch";
 import { scrapeGenres } from "@/src/lib/scrapers/drakorkita";
-
-/* ===============================
-   GET ALL GENRES
-   Example:
-   /api/drakorkita/genres
-================================ */
+import { jsonCache } from "@/src/lib/jsonCache";
+import { getErrorMessage } from "@/src/lib/getErrorMessage";
 
 export const runtime = "nodejs";
 
@@ -20,31 +16,31 @@ export const GET = withAuth(async () => {
         const url = `${process.env.DRAKORKITA_URL}/all`;
 
         // ===============================
-        // Fetch HTML via Proxy Fallback
+        // Fetch HTML via Proxy
         // ===============================
         const html = await proxyFetchHTML(url);
 
         // ===============================
         // Scrape Genre List
         // ===============================
-        const datas = await scrapeGenres({ data: html } as any);
+        const datas = scrapeGenres(html);
 
-        return NextResponse.json({
-            message: "success",
-            total: datas.length,
-            datas,
-        },
+        // ===============================
+        // Return Cached JSON
+        // ===============================
+        return jsonCache(
             {
-                headers: {
-                    "Cache-Control": "s-maxage=600, stale-while-revalidate=300",
-                },
-            }
+                message: "success",
+                total: datas.length,
+                datas,
+            },
+            300
         );
     } catch (err: unknown) {
         return NextResponse.json(
             {
                 message: "error",
-                error: err instanceof Error ? err.message : "Unknown error",
+                error: getErrorMessage(err),
             },
             { status: 500 }
         );

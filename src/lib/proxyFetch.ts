@@ -1,73 +1,86 @@
-/**
- * Proxy fallback fetch (gratis)
- * Untuk bypass blokir host scraping di Vercel
- */
+let lastWorkingProxy: ((url: string) => string) | null = null;
 
 const FREE_PROXIES = [
-  // ✅ AllOrigins
-  (url: string) =>
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    (url: string) =>
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
 
-  // ✅ Codetabs Proxy
-  (url: string) =>
-    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+    (url: string) =>
+        `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
 
-  // ✅ ThingProxy
-  (url: string) =>
-    `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(url)}`,
+    (url: string) =>
+        `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(url)}`,
 
-  // ✅ CorsProxy.io
-  (url: string) =>
-    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    (url: string) =>
+        `https://corsproxy.io/?${encodeURIComponent(url)}`,
 
-  // ✅ Cors.isomorphic-git (kadang hidup kadang mati)
-  (url: string) =>
-    `https://cors.isomorphic-git.org/${url}`,
+    (url: string) =>
+        `https://cors.isomorphic-git.org/${url}`,
 ];
 
-/**
- * Fetch HTML dengan fallback proxy gratis
- */
-export async function proxyFetchHTML(targetUrl: string): Promise<string> {
-  let lastError: unknown = null;
+async function fetchFromProxy(
+    proxyBuilder: (url: string) => string,
+    targetUrl: string
+): Promise<string> {
+    const proxyUrl = proxyBuilder(targetUrl);
 
-  for (const buildProxy of FREE_PROXIES) {
-    const proxyUrl = buildProxy(targetUrl);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
 
     try {
-      console.log("TRY PROXY:", proxyUrl);
+        console.log("⚡ TRY:", proxyUrl);
 
-      const res = await fetch(proxyUrl, {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
-        },
-        cache: "no-store",
-      });
+        const res = await fetch(proxyUrl, {
+            cache: "no-store",
+            signal: controller.signal,
+        });
 
-      if (!res.ok) {
-        lastError = `Proxy failed: ${res.status}`;
-        continue;
-      }
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`);
+        }
 
-      const html = await res.text();
+        const html = await res.text();
 
-      // kalau html kosong → skip
-      if (!html || html.length < 200) {
-        lastError = "HTML kosong dari proxy";
-        continue;
-      }
+        if (!html || html.length < 200) {
+            throw new Error("HTML kosong / diblokir");
+        }
 
-      console.log("SUCCESS PROXY:", proxyUrl);
-
-      return html;
-    } catch (err) {
-      lastError = err;
-      continue;
+        console.log("✅ SUCCESS:", proxyUrl);
+        return html;
+    } finally {
+        clearTimeout(timeout);
     }
-  }
+}
 
-  throw new Error(
-    `Semua proxy gratis gagal. Error terakhir: ${String(lastError)}`
-  );
+export async function proxyFetchHTML(targetUrl: string): Promise<string> {
+    // 1. Fast path: proxy terakhir sukses
+    if (lastWorkingProxy) {
+        try {
+            return await fetchFromProxy(lastWorkingProxy, targetUrl);
+        } catch {
+            console.log("⚠️ Last proxy failed, fallback race...");
+        }
+    }
+
+    // 2. Jalankan semua proxy tapi simpan error detail
+    const errors: string[] = [];
+
+    const tasks = FREE_PROXIES.map(async (proxy) => {
+        try {
+            const html = await fetchFromProxy(proxy, targetUrl);
+
+            lastWorkingProxy = proxy;
+            return html;
+        } catch (err) {
+            errors.push(`${proxy(targetUrl)} → ${String(err)}`);
+            throw err;
+        }
+    });
+
+    try {
+        return await Promise.any(tasks);
+    } catch {
+        throw new Error(
+            `Semua proxy gagal.\n\nDetail:\n${errors.join("\n")}`
+        );
+    }
 }
