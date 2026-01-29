@@ -1,22 +1,19 @@
-import { NextRequest, NextResponse } from "next/server";
-import { load } from "cheerio";
-
+import { NextResponse } from "next/server";
 import { withAuth } from "@/src/lib/withAuth";
-import { zenrowsFetch } from "@/src/lib/zenrowsFetch";
+
+import { proxyFetchHTML } from "@/src/lib/proxyFetch";
 import { scrapeHomePage } from "@/src/lib/scrapers/drakorkita";
 
 export const runtime = "nodejs";
 
-export const GET = withAuth(async (_req: NextRequest) => {
+export const GET = withAuth(async () => {
   try {
     const targetUrl = `${process.env.DRAKORKITA_URL}/`;
 
-    console.log("SCRAPE VIA ZENROWS:", targetUrl);
+    // ✅ ambil html lewat proxy fallback
+    const html = await proxyFetchHTML(targetUrl);
 
-    // ✅ Fetch HTML lewat ZenRows proxy
-    const html = await zenrowsFetch(targetUrl);
-
-    // Fake AxiosResponse supaya scraper kamu tetap bisa dipakai
+    // ✅ scrape langsung dari HTML string
     const result = await scrapeHomePage({
       data: html,
     } as any);
@@ -26,8 +23,6 @@ export const GET = withAuth(async (_req: NextRequest) => {
       data: result,
     });
   } catch (err: unknown) {
-    console.error("ZENROWS HOMEPAGE ERROR:", err);
-
     return NextResponse.json(
       {
         message: "error",
