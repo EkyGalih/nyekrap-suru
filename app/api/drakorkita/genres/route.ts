@@ -3,14 +3,27 @@ import { NextResponse } from "next/server";
 
 import { headers } from "@/src/lib/headers";
 import { scrapeGenres } from "@/src/lib/scrapers/drakorkita";
+import { withAuth } from "@/src/lib/withAuth";
 
-export async function GET() {
+/* ===============================
+   GET ALL GENRES
+   Example:
+   /api/drakorkita/genres
+================================ */
+
+export const GET = withAuth(async () => {
     try {
+        // ===============================
+        // Request ke Drakorkita
+        // ===============================
         const response = await axios.get<string>(
             `${process.env.DRAKORKITA_URL}/all`,
             { headers }
         );
 
+        // ===============================
+        // Scrape Genre List
+        // ===============================
         const datas = await scrapeGenres(response);
 
         return NextResponse.json({
@@ -27,4 +40,4 @@ export async function GET() {
             { status: 500 }
         );
     }
-}
+});

@@ -1,32 +1,61 @@
 import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
+
 import { headers } from "@/src/lib/headers";
 import { scrapeMovie } from "@/src/lib/scrapers/drakorkita";
+import { withAuth } from "@/src/lib/withAuth";
 
-export async function GET(req: NextRequest) {
+/* ===============================
+   GET ALL MOVIES
+   Example:
+   /api/drakorkita/movie?page=1
+================================ */
+
+export const GET = withAuth(async (req: NextRequest) => {
     try {
-        const page = req.nextUrl.searchParams.get("page") || "1";
+        // ✅ page query
+        const page = req.nextUrl.searchParams.get("page") ?? "1";
+        const currentPage = Number(page);
 
-        const axiosRequest = await axios.get<string>(
+        // ===============================
+        // Request ke Drakorkita
+        // ===============================
+        const response = await axios.get<string>(
             `${process.env.DRAKORKITA_URL}/all?media_type=movie&page=${page}`,
             { headers }
         );
 
-        const result = await scrapeMovie(axiosRequest);
+        // ===============================
+        // Scrape Result
+        // ===============================
+        const result = await scrapeMovie(response);
 
+        // ===============================
+        // Response API
+        // ===============================
         return NextResponse.json({
             message: "success",
-            page: parseInt(page),
+            page: currentPage,
             pagination: result.pagination,
+            total: result.datas.length,
             datas: result.datas,
-        });
-    } catch (error: unknown) {
-        const message =
-            error instanceof Error ? error.message : "Unknown error";
 
+            pagination_info: {
+                current_page: currentPage,
+                total_page: result.pagination,
+                has_next: currentPage < result.pagination,
+                has_prev: currentPage > 1,
+                next_page: currentPage < result.pagination ? currentPage + 1 : null,
+                prev_page: currentPage > 1 ? currentPage - 1 : null,
+            },
+        });
+    } catch (err: unknown) {
         return NextResponse.json(
-            { message: "error", error: message },
+            {
+                message: "error",
+                error: err instanceof Error ? err.message : "Unknown error",
+            },
             { status: 500 }
         );
     }
-}
+});

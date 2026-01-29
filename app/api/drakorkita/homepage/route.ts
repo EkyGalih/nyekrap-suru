@@ -1,26 +1,23 @@
 import axios from "axios";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+
 import { headers } from "@/src/lib/headers";
 import { scrapeHomePage } from "@/src/lib/scrapers/drakorkita";
+import { withAuth } from "@/src/lib/withAuth";
 
-export const dynamic = "force-dynamic";
+export const GET = withAuth(async (req: NextRequest) => {
+  const page = req.nextUrl.searchParams.get("page") ?? "1";
 
-export async function GET() {
-    try {
-        const res = await axios.get<string>(process.env.DRAKORKITA_URL!, {
-            headers,
-        });
+  const response = await axios.get<string>(
+    `${process.env.DRAKORKITA_URL}/page/${page}`,
+    { headers }
+  );
 
-        const data = await scrapeHomePage(res);
+  const result = await scrapeHomePage(response);
 
-        return NextResponse.json({
-            message: "success",
-            data,
-        });
-    } catch (err: unknown) {
-        return NextResponse.json(
-            { message: "error", error: String(err) },
-            { status: 500 }
-        );
-    }
-}
+  return NextResponse.json({
+    message: "success",
+    page: Number(page),
+    data: result,
+  });
+});

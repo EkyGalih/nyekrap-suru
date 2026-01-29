@@ -3,46 +3,72 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { headers } from "@/src/lib/headers";
 import { scrapeDetailGenres } from "@/src/lib/scrapers/drakorkita";
+import { withAuth } from "@/src/lib/withAuth";
 
-export async function GET(
-  req: NextRequest,
-  context: { params: Promise<{ endpoint: string }> }
-) {
-  try {
-    // ✅ unwrap params (Next.js 15 fix)
-    const { endpoint } = await context.params;
+/* ===============================
+   GET DRAMA BY GENRE
+   Example:
+   /api/drakorkita/genres/history?page=1
+================================ */
 
-    const page = req.nextUrl.searchParams.get("page") ?? "1";
+export const GET = withAuth(
+    async (
+        req: NextRequest,
+        { params }: { params: Promise<{ endpoint: string }> }
+    ) => {
+        try {
+            // ✅ unwrap params (Next.js 16 fix)
+            const { endpoint } = await params;
 
-    // ✅ Genre harus Capital sesuai website
-    const genre =
-      endpoint.charAt(0).toUpperCase() + endpoint.slice(1);
+            // ✅ page query
+            const page = req.nextUrl.searchParams.get("page") ?? "1";
 
-    const url = `${process.env.DRAKORKITA_URL}/all?genre=${encodeURIComponent(
-      genre
-    )}&page=${page}`;
+            // ===============================
+            // Genre Normalization
+            // Website butuh format Capitalized
+            // history → History
+            // action-drama → Action Drama
+            // ===============================
+            const genre = endpoint
+                .split("-")
+                .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                .join(" ");
 
-    console.log("FETCH URL:", url);
+            // ===============================
+            // Build URL
+            // ===============================
+            const url = `${process.env.DRAKORKITA_URL}/all?genre=${encodeURIComponent(
+                genre
+            )}&page=${page}`;
 
-    const response = await axios.get<string>(url, { headers });
+            console.log("FETCH GENRE URL:", url);
 
-    const result = await scrapeDetailGenres(response);
+            // ===============================
+            // Request ke Drakorkita
+            // ===============================
+            const response = await axios.get<string>(url, { headers });
 
-    return NextResponse.json({
-      message: "success",
-      genre,
-      page: Number(page),
-      pagination: result.pagination,
-      total: result.datas.length,
-      datas: result.datas,
-    });
-  } catch (err: unknown) {
-    return NextResponse.json(
-      {
-        message: "error",
-        error: err instanceof Error ? err.message : "Unknown error",
-      },
-      { status: 500 }
-    );
-  }
-}
+            // ===============================
+            // Scrape Result
+            // ===============================
+            const result = await scrapeDetailGenres(response);
+
+            return NextResponse.json({
+                message: "success",
+                genre,
+                page: Number(page),
+                pagination: result.pagination,
+                total: result.datas.length,
+                datas: result.datas,
+            });
+        } catch (err: unknown) {
+            return NextResponse.json(
+                {
+                    message: "error",
+                    error: err instanceof Error ? err.message : "Unknown error",
+                },
+                { status: 500 }
+            );
+        }
+    }
+);

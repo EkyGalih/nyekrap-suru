@@ -3,8 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { headers } from "@/src/lib/headers";
 import { scrapeSeries } from "@/src/lib/scrapers/drakorkita";
 import { getErrorMessage } from "@/src/lib/getErrorMessage";
+import { withAuth } from "@/src/lib/withAuth";
 
-export async function GET(req: NextRequest) {
+export const GET = withAuth(async (req: NextRequest) => {
   try {
     const page = req.nextUrl.searchParams.get("page") || "1";
 
@@ -38,4 +39,4 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
