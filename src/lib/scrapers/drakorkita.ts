@@ -22,6 +22,8 @@ import {
 } from "@/app/types/drakor/drama";
 import { extractEndpoint, extractYear } from "../helpers/helpers";
 import { proxyFetchHTML } from "../proxyFetch";
+import { getCache, setCache } from "../redisCache";
+import { fetchWithBrowser } from "../fetchWithBrowser";
 export const runtime = "nodejs";
 
 export function scrapeHomePage(html: string): HomeResult {
@@ -493,24 +495,20 @@ export function scrapeDetailGenres(html: string): GenreDetailResult {
     };
 }
 
-export async function scrapeSearch(
-    res: AxiosResponse<string>
-): Promise<SearchDramaResult> {
-    const $ = load(res.data);
+export function scrapeSearch(html: string): SearchDramaResult {
+    const $ = load(html);
 
     const datas: SearchDramaCard[] = [];
     const pages: number[] = [];
 
-    /* ===============================
-       CARD LIST SCRAPING
-    ============================== */
-
+    // ===============================
+    // LOOP CARD RESULT
+    // ===============================
     $(".row.item-list .card").each((_, el) => {
-        const element = $(el);
+        const anchor = $(el).find("a.poster");
 
-        // Title
         const title =
-            element
+            anchor
                 .find("span.titit")
                 .clone()
                 .children()
@@ -519,57 +517,49 @@ export async function scrapeSearch(
                 .text()
                 .trim() || "";
 
-        // Duration
-        const time = element.find("span.type").text().trim() || null;
+        const endpoint =
+            anchor.attr("href")?.split("/detail/")[1]?.replace("/", "") ?? null;
 
-        // Quality
-        const quality =
-            element.find("span.titit span").first().text().trim() || null;
+        const thumbnail = anchor.find("img.poster").attr("src") ?? null;
 
-        // Updated At
+        const time = anchor.find("span.type").text().trim() || null;
+
+        const resolution =
+            anchor.find("span.titit span").first().text().trim() || null;
+
         const updated_at =
-            element.find("span.titit span").last().text().trim() || null;
+            anchor.find("span.titit span").last().text().trim() || null;
 
-        // Episode
         const eps =
-            element.find("span.tagw span.qua").text().trim() || null;
+            anchor.find("span.tagw span.qua").text().trim() || null;
 
-        // Rating
-        const ratingRaw = element.find("span.rat").text().trim();
+        const ratingRaw = anchor.find("span.rat").text().trim();
         const rating = ratingRaw ? ratingRaw.replace("★", "").trim() : null;
 
-        // Thumbnail
-        const thumbnail = element.find("img.poster").attr("src") ?? null;
-
-        // Endpoint
-        const href = element.find("a.poster").attr("href") ?? "";
-        const endpoint = href ? extractEndpoint(href) : null;
-
-        datas.push({
-            title,
-            time,
-            quality,
-            updated_at,
-            eps,
-            rating,
-            thumbnail,
-            endpoint,
-        });
+        if (endpoint) {
+            datas.push({
+                title,
+                endpoint,
+                time,
+                thumbnail,
+                resolution,
+                updated_at,
+                eps,
+                rating,
+            });
+        }
     });
 
-    /* ===============================
-       PAGINATION SCRAPING
-    ============================== */
-
+    // ===============================
+    // PAGINATION
+    // ===============================
     $(".wp-pagenavi a, .wp-pagenavi span").each((_, el) => {
         const num = parseInt($(el).text().trim(), 10);
         if (!isNaN(num)) pages.push(num);
     });
 
-    const pagination = pages.length > 0 ? Math.max(...pages) : 1;
-
     return {
-        pagination,
+        pagination: pages.length > 0 ? Math.max(...pages) : 1,
         datas,
     };
 }
@@ -713,69 +703,32 @@ export async function scrapeDetailAllType(
        LOOP EPISODES
     =============================== */
 
-    const episodes: EpisodeItem[] = await Promise.all(
-        episodeElements.map(async (el, index) => {
-            const wrap = $eps(el).attr("onclick");
+    const episodes: EpisodeItem[] = episodeElements.map((el, index) => {
+        const wrap = $eps(el).attr("onclick")
 
-            if (!wrap) {
-                return {
-                    title: `Episode ${index + 1}`,
-                    episode_id: "unknown",
-                    resolutions: [],
-                };
-            }
-
-            const inside = wrap.substring(
-                wrap.indexOf("(") + 1,
-                wrap.indexOf(")")
-            );
-
-            const epsId = inside.split(",")[0].replace(/'/g, "").trim();
-            const epsTag = inside.split(",")[1].replace(/'/g, "").trim();
-
-            const episodeTitle =
-                $eps(el).text().trim() || `Episode ${index + 1}`;
-
-            /* ===============================
-               SERVER INFO
-            =============================== */
-
-            const serverRaw = await proxyFetchHTML(
-                `${process.env.DRAKORKITA_URL}/api/server.php?episode_id=${epsId}&tag=${epsTag}`
-            );
-
-            const serverJson = JSON.parse(serverRaw);
-
-            const { qua, server_id } = serverJson.data;
-
-            /* ===============================
-               VIDEO LINKS
-            =============================== */
-
-            const videoRaw = await proxyFetchHTML(
-                `${process.env.DRAKORKITA_URL}/api/video.php?id=${epsId}&qua=${qua}&server_id=${server_id}&tag=${epsTag}`
-            );
-
-            const videoJson = JSON.parse(videoRaw);
-
-            const splitFile = videoJson.file.split(",");
-
-            const resolutions: EpisodeResolution[] = splitFile.map((link: string) => {
-                const match = link.match(/(\d{3,4})p/);
-
-                return {
-                    resolution: match ? `${match[1]}p` : "Unknown",
-                    src: link.substring(link.indexOf("https")).trim(),
-                };
-            });
-
+        if (!wrap) {
             return {
-                title: episodeTitle,
-                episode_id: epsId,
-                resolutions,
-            };
-        })
-    );
+                title: `Episode ${index + 1}`,
+                episode_id: "unknown",
+                tag: "tv",
+                resolutions: [],
+            }
+        }
+
+        const inside = wrap.substring(wrap.indexOf("(") + 1, wrap.indexOf(")"))
+
+        const epsId = inside.split(",")[0].replace(/'/g, "").trim()
+        const epsTag = inside.split(",")[1].replace(/'/g, "").trim() // ✅ INI PENTING
+
+        const episodeTitle = $eps(el).text().trim() || `Episode ${index + 1}`
+
+        return {
+            title: episodeTitle,
+            episode_id: epsId,
+            tag: epsTag, // ✅ simpan tag benernya
+            resolutions: [],
+        }
+    })
 
     /* ===============================
        FINAL RESULT

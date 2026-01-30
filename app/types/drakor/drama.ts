@@ -20,9 +20,10 @@ export interface EpisodeResolution {
 }
 
 export interface EpisodeItem {
-  title: string;
-  episode_id: string;
-  resolutions: EpisodeResolution[];
+  title: string
+  episode_id: string
+  tag: string
+  resolutions: EpisodeResolution[]
 }
 
 export interface DrakorRating {
@@ -74,7 +75,7 @@ export interface DetailParams {
 export interface SearchDramaCard {
   title: string;
   time: string | null;
-  quality: string | null;
+  resolution: string | null;
   updated_at: string | null;
   eps: string | null;
   rating: string | null;

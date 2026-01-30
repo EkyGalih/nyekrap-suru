@@ -1,70 +1,92 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { scrapeOngoingSeries } from "@/src/lib/scrapers/drakorkita";
 import { withAuth } from "@/src/lib/withAuth";
 
 import { proxyFetchHTML } from "@/src/lib/proxyFetch";
 import { getErrorMessage } from "@/src/lib/getErrorMessage";
-import { jsonCache } from "@/src/lib/jsonCache";
+import { redis } from "@/src/lib/redisCache";
 
 export const runtime = "nodejs";
 
 export const GET = withAuth(async (req: NextRequest) => {
-  try {
-    // ===============================
-    // Query Params
-    // ===============================
-    const page = req.nextUrl.searchParams.get("page") ?? "1";
-    const currentPage = Number(page);
+    try {
+        const page = req.nextUrl.searchParams.get("page") ?? "1";
+        const currentPage = Number(page);
 
-    // ===============================
-    // Target URL (Ongoing)
-    // ===============================
-    const url = `${process.env.DRAKORKITA_URL}/all?status=returning%20series&page=${page}`;
+        // ✅ Cache key per page
+        const cacheKey = `drakorkita:ongoing:page:${page}`;
 
-    // ===============================
-    // Fetch HTML via Proxy
-    // ===============================
-    const html = await proxyFetchHTML(url);
+        // ===============================
+        // ✅ Redis Cache Check
+        // ===============================
+        const cached = await redis.get(cacheKey);
 
-    // ===============================
-    // Scrape Result
-    // ===============================
-    const result = scrapeOngoingSeries(html);
+        if (cached) {
+            console.log("⚡ ONGOING CACHE HIT:", cacheKey);
 
-    const totalPage = result.pagination;
+            return NextResponse.json({
+                message: "success (cache)",
+                ...(cached as any),
+            });
+        }
 
-    // ===============================
-    // Return JSON + Cache (Revalidate)
-    // ===============================
-    return jsonCache(
-      {
-        message: "success",
-        page: currentPage,
-        pagination: totalPage,
-        datas: result.datas,
+        console.log("🔥 ONGOING CACHE MISS → SCRAPING");
 
-        filters: result.filters,
-        sidebar: result.sidebar,
+        // ===============================
+        // Fetch HTML via ScraperAPI Proxy
+        // ===============================
+        const url = `${process.env.DRAKORKITA_URL}/all?status=returning%20series&page=${page}`;
+        const html = await proxyFetchHTML(url);
 
-        pagination_info: {
-          current_page: currentPage,
-          total_page: totalPage,
-          has_next: currentPage < totalPage,
-          has_prev: currentPage > 1,
-          next_page: currentPage < totalPage ? currentPage + 1 : null,
-          prev_page: currentPage > 1 ? currentPage - 1 : null,
-        },
-      },
-      300 // ✅ cache 5 menit
-    );
-  } catch (err: unknown) {
-    return jsonCache(
-      {
-        message: "error",
-        error: getErrorMessage(err),
-      },
-      500
-    );
-  }
+        // ===============================
+        // Scrape Result
+        // ===============================
+        const result = scrapeOngoingSeries(html);
+
+        const totalPage = result.pagination;
+
+        // ===============================
+        // Payload
+        // ===============================
+        const payload = {
+            page: currentPage,
+            pagination: totalPage,
+            datas: result.datas,
+
+            filters: result.filters,
+            sidebar: result.sidebar,
+
+            pagination_info: {
+                current_page: currentPage,
+                total_page: totalPage,
+                has_next: currentPage < totalPage,
+                has_prev: currentPage > 1,
+                next_page: currentPage < totalPage ? currentPage + 1 : null,
+                prev_page: currentPage > 1 ? currentPage - 1 : null,
+            },
+        };
+
+        // ===============================
+        // ✅ Save Redis Cache (1 Hari)
+        // ===============================
+        await redis.set(cacheKey, payload, {
+            ex: 86400, // ✅ 1x sehari
+        });
+
+        console.log("✅ ONGOING SAVED:", cacheKey);
+
+        return NextResponse.json({
+            message: "success",
+            ...payload,
+        });
+    } catch (err: unknown) {
+        return NextResponse.json(
+            {
+                message: "error",
+                error: getErrorMessage(err),
+            },
+            { status: 500 }
+        );
+    }
 });
