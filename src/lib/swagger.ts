@@ -25,8 +25,8 @@ export const swaggerSpec = {
 
     servers: [
         {
-            url: "http://localhost:3000/api",
-            // url: "https://nyekrap-suru.vercel.app/api",
+            // url: "http://localhost:3000/api",
+            url: "https://nyekrap-suru.vercel.app/api",
             description: "Server Lokal (Development)",
         },
     ],
