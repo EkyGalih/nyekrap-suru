@@ -6,31 +6,36 @@ import { getCache, setCache } from "@/src/lib/redisCache";
 
 export const runtime = "nodejs";
 
-/**
- * GET DETAIL DRAMA/MOVIE
- * URL: /api/drakorkita/detail/[endpoint]
- */
 export const GET = withAuth(
-    async (_req: NextRequest, { params }: { params: Promise<{ endpoint: string }> }) => {
+    async (
+        _req: NextRequest,
+        { params }: { params: Promise<{ endpoint: string }> }
+    ) => {
+        let cacheKey = "unknown";
+
         try {
             const { endpoint } = await params;
 
             if (!endpoint) {
-                return NextResponse.json({ message: "Endpoint tidak valid" }, { status: 400 });
+                return NextResponse.json(
+                    { message: "Endpoint tidak valid" },
+                    { status: 400 }
+                );
             }
 
-            const cacheKey = `drakorkita:detail:${endpoint}`;
+            cacheKey = `drakorkita:detail:${endpoint}`;
 
             /* ===============================
-               1. CEK CACHE REDIS
+               1. CACHE CHECK
             =============================== */
             const cached = await getCache(cacheKey);
 
             if (cached) {
                 console.log(`⚡ DETAIL CACHE HIT: ${cacheKey}`);
+
                 return NextResponse.json({
                     message: "success (cache)",
-                    data: typeof cached === "string" ? JSON.parse(cached) : cached,
+                    data: cached,
                 });
             }
 
@@ -42,9 +47,8 @@ export const GET = withAuth(
             const url = `${process.env.DRAKORKITA_URL}/detail/${endpoint}`;
             const html = await proxyFetchHTML(url);
 
-            // Validasi jika HTML kosong atau gagal fetch
-            if (!html || html.length < 500) { // Asumsi detail page minimal > 500 karakter
-                throw new Error("Gagal mengambil konten dari provider (HTML Empty)");
+            if (!html || html.length < 500) {
+                throw new Error("HTML kosong / gagal fetch detail page");
             }
 
             /* ===============================
@@ -52,27 +56,26 @@ export const GET = withAuth(
             =============================== */
             const data = await scrapeDetailAllType(endpoint, html);
 
-            // Validasi hasil scrape agar tidak menyimpan data 'zonk'
-            if (!data || Object.keys(data).length === 0) {
-                throw new Error("Gagal mengekstrak data detail (Scrape Failed)");
+            if (!data || (data as any).error) {
+                throw new Error("Scrape detail gagal atau data invalid");
             }
 
             /* ===============================
-               4. SIMPAN KE CACHE (TTL 1 JAM)
+               4. SAVE CACHE (7 HARI)
             =============================== */
-            // Gunakan await atau tidak tergantung apakah Anda ingin respon instan
-            await setCache(cacheKey, data, 3600);
+            await setCache(cacheKey, data, 604800);
 
-            console.log(`✅ DETAIL SAVED TO CACHE: ${cacheKey}`);
+            console.log(`✅ DETAIL SAVED: ${cacheKey}`);
 
             return NextResponse.json({
                 message: "success",
                 data,
             });
-
         } catch (err: unknown) {
-            const errorMessage = err instanceof Error ? err.message : "Unknown error";
-            console.error(`❌ DETAIL ERROR [${cacheKey ?? 'unknown'}]:`, errorMessage);
+            const errorMessage =
+                err instanceof Error ? err.message : "Unknown error";
+
+            console.error(`❌ DETAIL ERROR [${cacheKey}]:`, errorMessage);
 
             return NextResponse.json(
                 {
