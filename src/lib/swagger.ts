@@ -25,8 +25,8 @@ export const swaggerSpec = {
 
     servers: [
         {
-            // url: "http://localhost:3000/api",
-            url: "https://nyekrap-suru.vercel.app/api",
+            url: "http://localhost:3000/api",
+            // url: "https://nyekrap-suru.vercel.app/api",
             description: "Server Lokal (Development)",
         },
     ],
@@ -300,6 +300,84 @@ export const swaggerSpec = {
                 responses: {
                     200: {
                         description: "Berhasil mengambil detail drama/movie",
+                    },
+                },
+            },
+        },
+
+        /* ===============================
+   EPISODE STREAM RESOLUTION
+=============================== */
+        "/drakorkita/episode/{id}": {
+            get: {
+                tags: ["Drakorkita"],
+                summary: "Ambil Link Video Episode (Lazy Load)",
+                description:
+                    "Mengambil daftar resolusi video streaming berdasarkan episode ID. Endpoint ini di-load hanya ketika user klik episode (lazy request) dan sudah menggunakan Redis cache agar tidak banjir request.",
+
+                parameters: [
+                    {
+                        name: "id",
+                        in: "path",
+                        required: true,
+                        description: "Episode ID dari hasil detail drama",
+                        schema: {
+                            type: "string",
+                            example: "idol-i-2025-iyu4",
+                        },
+                    },
+
+                    // ✅ optional tag (tidak wajib)
+                    {
+                        name: "tag",
+                        in: "query",
+                        required: true,
+                        description:
+                            "Gunakan tag episode yang sudah diambil dari detail episode.",
+                        schema: {
+                            type: "string",
+                            example: "708aab6f6553a34f80509a8f906eb0b7",
+                        },
+                    },
+                ],
+
+                responses: {
+                    200: {
+                        description: "Berhasil mengambil link resolusi video episode",
+                        content: {
+                            "application/json": {
+                                example: {
+                                    message: "success",
+                                    episode_id: "123456",
+                                    resolutions: [
+                                        {
+                                            resolution: "1080p",
+                                            src: "https://stream-provider.com/video1080.m3u8",
+                                        },
+                                        {
+                                            resolution: "720p",
+                                            src: "https://stream-provider.com/video720.m3u8",
+                                        },
+                                        {
+                                            resolution: "480p",
+                                            src: "https://stream-provider.com/video480.m3u8",
+                                        },
+                                    ],
+                                },
+                            },
+                        },
+                    },
+
+                    400: {
+                        description: "Episode ID tidak valid",
+                    },
+
+                    502: {
+                        description: "Provider tidak mengembalikan data video",
+                    },
+
+                    500: {
+                        description: "Server error",
                     },
                 },
             },

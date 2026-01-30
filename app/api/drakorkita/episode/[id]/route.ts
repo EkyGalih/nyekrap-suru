@@ -1,172 +1,164 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth } from "@/src/lib/withAuth";
 import { proxyFetchHTML } from "@/src/lib/proxyFetch";
-
 import { getCache, setCache } from "@/src/lib/redisCache";
 
 export const runtime = "nodejs";
 
-type ServerResponse =
-    | { data: { qua: string; server_id: string } }
-    | { data: null;[key: string]: unknown };
+const corsHeaders = {
+    "Access-Control-Allow-Origin": "http://localhost:3001",
+    "Access-Control-Allow-Methods": "GET,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, x-api-key",
+};
 
-type VideoResponse =
-    | { file: string }
-    | { file?: string;[key: string]: unknown };
+/**
+ * GET EPISODE VIDEO RESOLUTIONS
+ * Example:
+ * /api/drakorkita/episode/Ge5LwM681Dn?tag=708aab6f...
+ */
+export async function OPTIONS() {
+    return NextResponse.json({}, { headers: corsHeaders });
+}
 
-export const GET = withAuth(
-    async (
-        req: NextRequest,
-        { params }: { params: Promise<{ id: string }> }
-    ) => {
-        const { id } = await params;
+export async function GET(
+    req: NextRequest,
+    { params }: { params: { id: string } }
+) {
+    let cacheKey = "unknown";
 
-        try {
-            if (!id) {
-                return NextResponse.json(
-                    { message: "error", error: "Episode ID tidak valid" },
-                    { status: 400 }
-                );
-            }
+    try {
+        const { id } = params;
 
-            // ✅ tag dari client
-            const tag = req.nextUrl.searchParams.get("tag");
+        if (!id) {
+            return NextResponse.json(
+                { message: "error", error: "Episode ID tidak valid" },
+                { status: 400 }
+            );
+        }
 
-            if (!tag) {
-                return NextResponse.json(
-                    { message: "error", error: "Query param 'tag' wajib diisi" },
-                    { status: 400 }
-                );
-            }
+        // ✅ OPTIONAL API KEY CHECK (tanpa middleware)
+        const apiKey = req.headers.get("x-api-key");
 
-            // ===============================
-            // ✅ REDIS CACHE KEY
-            // ===============================
-            const cacheKey = `drakorkita:episode:${id}:tag:${tag}`;
+        if (apiKey !== process.env.API_KEY) {
+            return NextResponse.json(
+                { message: "error", error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
 
-            const cached = await getCache(cacheKey);
+        // ✅ Tag wajib dari detail episodes
+        const tag = req.nextUrl.searchParams.get("tag");
 
-            if (cached) {
-                console.log("⚡ EPISODE CACHE HIT:", cacheKey);
-
-                return NextResponse.json({
-                    message: "success (cache)",
-                    ...cached,
-                });
-            }
-
-            console.log("🔥 EPISODE CACHE MISS → SCRAPING:", cacheKey);
-
-            // ===============================
-            // 1) server.php
-            // ===============================
-            const serverUrl = `${process.env.DRAKORKITA_URL}/api/server.php?episode_id=${id}&tag=${encodeURIComponent(
-                tag
-            )}`;
-
-            const serverRaw = await proxyFetchHTML(serverUrl);
-
-            let serverJson: ServerResponse;
-            try {
-                serverJson = JSON.parse(serverRaw) as ServerResponse;
-            } catch {
-                return NextResponse.json(
-                    {
-                        message: "error",
-                        error: "server.php tidak mengembalikan JSON",
-                        preview: serverRaw.slice(0, 200),
-                    },
-                    { status: 502 }
-                );
-            }
-
-            if (!serverJson.data) {
-                return NextResponse.json(
-                    {
-                        message: "error",
-                        error: "server.php return data null → tag salah atau diblok",
-                        episode_id: id,
-                        tag,
-                    },
-                    { status: 502 }
-                );
-            }
-
-            const { qua, server_id } = serverJson.data;
-
-            // ===============================
-            // 2) video.php
-            // ===============================
-            const videoUrl = `${process.env.DRAKORKITA_URL}/api/video.php?id=${id}&qua=${encodeURIComponent(
-                qua
-            )}&server_id=${encodeURIComponent(server_id)}&tag=${encodeURIComponent(
-                tag
-            )}`;
-
-            const videoRaw = await proxyFetchHTML(videoUrl);
-
-            let videoJson: VideoResponse;
-            try {
-                videoJson = JSON.parse(videoRaw) as VideoResponse;
-            } catch {
-                return NextResponse.json(
-                    {
-                        message: "error",
-                        error: "video.php tidak mengembalikan JSON",
-                        preview: videoRaw.slice(0, 200),
-                    },
-                    { status: 502 }
-                );
-            }
-
-            if (!videoJson.file) {
-                return NextResponse.json(
-                    {
-                        message: "error",
-                        error: "video.php tidak punya field 'file'",
-                        episode_id: id,
-                    },
-                    { status: 502 }
-                );
-            }
-
-            // ===============================
-            // Parse Resolutions
-            // ===============================
-            const resolutions = videoJson.file.split(",").map((link: string) => {
-                const match = link.match(/(\d{3,4})p/);
-
-                return {
-                    resolution: match ? `${match[1]}p` : "Unknown",
-                    src: link.substring(link.indexOf("https")).trim(),
-                };
-            });
-
-            const payload = {
-                episode_id: id,
-                tag,
-                resolutions,
-            };
-
-            // ===============================
-            // ✅ SAVE CACHE 12 JAM
-            // ===============================
-            await setCache(cacheKey, payload, 43200);
-
-            console.log("✅ EPISODE SAVED:", cacheKey);
-
-            return NextResponse.json({
-                message: "success",
-                ...payload,
-            });
-        } catch (err: unknown) {
+        if (!tag) {
             return NextResponse.json(
                 {
                     message: "error",
-                    error: err instanceof Error ? err.message : "Unknown error",
+                    error: "Query param 'tag' wajib diisi (ambil dari detail episodes)",
                 },
-                { status: 500 }
+                { status: 400 }
             );
         }
+
+        // ===============================
+        // ✅ CACHE KEY
+        // ===============================
+        cacheKey = `drakorkita:episode:${id}:tag:${tag}`;
+
+        const cached = await getCache(cacheKey);
+
+        if (cached) {
+            console.log("⚡ EPISODE CACHE HIT:", cacheKey);
+
+            return NextResponse.json({
+                message: "success (cache)",
+                ...cached,
+            });
+        }
+
+        console.log("🔥 EPISODE CACHE MISS → SCRAPING:", cacheKey);
+
+        // ===============================
+        // 1) server.php
+        // ===============================
+        const serverUrl = `${process.env.DRAKORKITA_URL}/api/server.php?episode_id=${id}&tag=${encodeURIComponent(
+            tag
+        )}`;
+
+        const serverRaw = await proxyFetchHTML(serverUrl);
+        const serverJson = JSON.parse(serverRaw);
+
+        if (!serverJson?.data) {
+            return NextResponse.json(
+                {
+                    message: "error",
+                    error: "server.php return null → tag salah atau provider blocked",
+                    episode_id: id,
+                    tag,
+                },
+                { status: 502 }
+            );
+        }
+
+        const { qua, server_id } = serverJson.data;
+
+        // ===============================
+        // 2) video.php
+        // ===============================
+        const videoUrl = `${process.env.DRAKORKITA_URL}/api/video.php?id=${id}&qua=${encodeURIComponent(
+            qua
+        )}&server_id=${encodeURIComponent(server_id)}&tag=${encodeURIComponent(tag)}`;
+
+        const videoRaw = await proxyFetchHTML(videoUrl);
+        const videoJson = JSON.parse(videoRaw);
+
+        if (!videoJson?.file) {
+            return NextResponse.json(
+                {
+                    message: "error",
+                    error: "video.php tidak mengembalikan file",
+                    episode_id: id,
+                },
+                { status: 502 }
+            );
+        }
+
+        // ===============================
+        // Parse Resolutions
+        // ===============================
+        const resolutions = videoJson.file.split(",").map((link: string) => {
+            const match = link.match(/(\d{3,4})p/);
+
+            return {
+                resolution: match ? `${match[1]}p` : "Unknown",
+                src: link.substring(link.indexOf("https")).trim(),
+            };
+        });
+
+        const payload = {
+            episode_id: id,
+            tag,
+            resolutions,
+        };
+
+        // ===============================
+        // ✅ SAVE CACHE 12 JAM
+        // ===============================
+        await setCache(cacheKey, payload, 43200);
+
+        console.log("✅ EPISODE SAVED:", cacheKey);
+
+        return NextResponse.json({
+            message: "success",
+            ...payload,
+        }, { headers: corsHeaders });
+    } catch (err: unknown) {
+        console.error("❌ EPISODE ERROR:", cacheKey);
+
+        return NextResponse.json(
+            {
+                message: "error",
+                error: err instanceof Error ? err.message : "Unknown error",
+            },
+            { status: 500, headers: corsHeaders }
+        );
     }
-);
+}
