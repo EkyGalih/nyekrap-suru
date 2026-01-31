@@ -1,6 +1,13 @@
 export const swaggerSpec = {
     openapi: "3.0.0",
+
+    /* ===============================
+       COMPONENTS
+    =============================== */
     components: {
+        /* ===============================
+           SECURITY SCHEME
+        =============================== */
         securitySchemes: {
             ApiKeyAuth: {
                 type: "apiKey",
@@ -8,36 +15,92 @@ export const swaggerSpec = {
                 name: "x-api-key",
             },
         },
+
+        /* ===============================
+           SCHEMAS (FIXED FOR $ref)
+        =============================== */
+        schemas: {
+            GenreItem: {
+                type: "object",
+                properties: {
+                    title: {
+                        type: "string",
+                        example: "Action",
+                    },
+                    endpoint: {
+                        type: "string",
+                        example: "action",
+                    },
+                },
+            },
+
+            EpisodeItem: {
+                type: "object",
+                properties: {
+                    title: {
+                        type: "string",
+                        example: "Episode 4 Subtitle Indonesia",
+                    },
+                    endpoint: {
+                        type: "string",
+                        example: "nnshbti-s3-p2-episode-4-sub-indo",
+                    },
+                },
+            },
+        },
     },
 
+    /* ===============================
+       GLOBAL SECURITY
+    =============================== */
     security: [
         {
             ApiKeyAuth: [],
         },
     ],
 
+    /* ===============================
+       INFO
+    =============================== */
     info: {
-        title: "Drakor Scraping API",
+        title: "Drakor + Anime Scraping API",
         version: "1.0.0",
         description:
-            "Dokumentasi API untuk scraping data drama dan film dari situs Drakorkita.",
+            "Dokumentasi API untuk scraping data drama/movie dari Drakorkita dan anime dari Situs Anime.",
     },
 
+    /* ===============================
+       SERVERS
+    =============================== */
     servers: [
         {
             // url: "http://localhost:3000/api",
             url: "https://nyekrap-suru.vercel.app/api",
             description: "Server Lokal (Development)",
         },
+        // {
+        //   url: "https://nyekrap-suru.vercel.app/api",
+        //   description: "Server Production",
+        // },
     ],
 
+    /* ===============================
+       TAGS
+    =============================== */
     tags: [
         {
             name: "Drakorkita",
             description: "Endpoint scraping drama dan film dari Drakorkita",
         },
+        {
+            name: "Anime",
+            description: "Endpoint scraping anime ongoing & complete dari Situs Anime",
+        },
     ],
 
+    /* ===============================
+       PATHS
+    =============================== */
     paths: {
         /* ===============================
            HOMEPAGE
@@ -48,10 +111,6 @@ export const swaggerSpec = {
                 summary: "Ambil Drama Terbaru (Homepage)",
                 description:
                     "Mengambil daftar drama terbaru yang tampil di halaman utama Drakorkita.",
-
-                parameters: [
-                ],
-
                 responses: {
                     200: {
                         description: "Berhasil mengambil data homepage",
@@ -69,7 +128,6 @@ export const swaggerSpec = {
                 summary: "Ambil Semua Series",
                 description:
                     "Mengambil semua drama series (TV) dari Drakorkita berdasarkan halaman.",
-
                 parameters: [
                     {
                         name: "page",
@@ -82,7 +140,6 @@ export const swaggerSpec = {
                         },
                     },
                 ],
-
                 responses: {
                     200: {
                         description: "Berhasil mengambil daftar series",
@@ -100,7 +157,6 @@ export const swaggerSpec = {
                 summary: "Ambil Series Ongoing",
                 description:
                     "Mengambil daftar drama series yang masih ongoing (belum tamat).",
-
                 parameters: [
                     {
                         name: "page",
@@ -113,7 +169,6 @@ export const swaggerSpec = {
                         },
                     },
                 ],
-
                 responses: {
                     200: {
                         description: "Berhasil mengambil series ongoing",
@@ -131,7 +186,6 @@ export const swaggerSpec = {
                 summary: "Ambil Series Tamat (Completed/Ended)",
                 description:
                     "Mengambil daftar drama series yang sudah selesai/tamat dari Drakorkita.",
-
                 parameters: [
                     {
                         name: "page",
@@ -144,7 +198,6 @@ export const swaggerSpec = {
                         },
                     },
                 ],
-
                 responses: {
                     200: {
                         description: "Berhasil mengambil daftar series completed",
@@ -161,7 +214,6 @@ export const swaggerSpec = {
                 tags: ["Drakorkita"],
                 summary: "Ambil Semua Movie",
                 description: "Mengambil daftar film/movie dari Drakorkita.",
-
                 parameters: [
                     {
                         name: "page",
@@ -174,7 +226,6 @@ export const swaggerSpec = {
                         },
                     },
                 ],
-
                 responses: {
                     200: {
                         description: "Berhasil mengambil daftar movie",
@@ -192,7 +243,6 @@ export const swaggerSpec = {
                 summary: "Cari Drama atau Movie",
                 description:
                     "Melakukan pencarian drama/movie berdasarkan keyword yang dimasukkan.",
-
                 parameters: [
                     {
                         name: "q",
@@ -215,7 +265,6 @@ export const swaggerSpec = {
                         },
                     },
                 ],
-
                 responses: {
                     200: {
                         description: "Berhasil mengambil hasil pencarian",
@@ -227,6 +276,9 @@ export const swaggerSpec = {
             },
         },
 
+        /* ===============================
+           GENRES
+        =============================== */
         "/drakorkita/genres": {
             get: {
                 tags: ["Drakorkita"],
@@ -283,20 +335,17 @@ export const swaggerSpec = {
                 summary: "Ambil Detail Drama atau Movie",
                 description:
                     "Mengambil detail lengkap drama/movie berdasarkan endpoint detail.",
-
                 parameters: [
                     {
                         name: "endpoint",
                         in: "path",
                         required: true,
-                        description: "Slug endpoint drama/movie",
                         schema: {
                             type: "string",
                             example: "alchemy-of-souls-2022-x9ab",
                         },
                     },
                 ],
-
                 responses: {
                     200: {
                         description: "Berhasil mengambil detail drama/movie",
@@ -306,78 +355,212 @@ export const swaggerSpec = {
         },
 
         /* ===============================
-   EPISODE STREAM RESOLUTION
-=============================== */
+           EPISODE STREAM RESOLUTION
+        =============================== */
         "/drakorkita/episode/{id}": {
             get: {
                 tags: ["Drakorkita"],
                 summary: "Ambil Link Video Episode (Lazy Load)",
                 description:
-                    "Mengambil daftar resolusi video streaming berdasarkan episode ID. Endpoint ini di-load hanya ketika user klik episode (lazy request) dan sudah menggunakan Redis cache agar tidak banjir request.",
-
+                    "Mengambil daftar resolusi video streaming berdasarkan episode ID.",
                 parameters: [
                     {
                         name: "id",
                         in: "path",
                         required: true,
-                        description: "Episode ID dari hasil detail drama",
                         schema: {
                             type: "string",
-                            example: "idol-i-2025-iyu4",
+                            example: "Ge5LwM681Dn",
                         },
                     },
-
-                    // ✅ optional tag (tidak wajib)
                     {
                         name: "tag",
                         in: "query",
                         required: true,
-                        description:
-                            "Gunakan tag episode yang sudah diambil dari detail episode.",
                         schema: {
                             type: "string",
                             example: "708aab6f6553a34f80509a8f906eb0b7",
                         },
                     },
                 ],
-
                 responses: {
                     200: {
                         description: "Berhasil mengambil link resolusi video episode",
-                        content: {
-                            "application/json": {
-                                example: {
-                                    message: "success",
-                                    episode_id: "123456",
-                                    resolutions: [
-                                        {
-                                            resolution: "1080p",
-                                            src: "https://stream-provider.com/video1080.m3u8",
-                                        },
-                                        {
-                                            resolution: "720p",
-                                            src: "https://stream-provider.com/video720.m3u8",
-                                        },
-                                        {
-                                            resolution: "480p",
-                                            src: "https://stream-provider.com/video480.m3u8",
-                                        },
-                                    ],
-                                },
-                            },
+                    },
+                },
+            },
+        },
+
+        /* ===============================
+           ANIME HOMEPAGE (Situs Anime)
+        =============================== */
+        "/anime/homepage": {
+            get: {
+                tags: ["Anime"],
+                summary: "Ambil Homepage Anime (Ongoing + Complete)",
+                description:
+                    "Mengambil daftar anime ongoing terbaru dan anime complete dari Situs Anime.",
+                responses: {
+                    200: {
+                        description: "Berhasil mengambil data anime",
+                    },
+                    500: {
+                        description: "Server error saat scraping Situs Anime",
+                    },
+                },
+            },
+        },
+
+        /* ===============================
+           ANIME DETAIL (FIXED $ref)
+        =============================== */
+        "/anime/detail/{slug}": {
+            get: {
+                tags: ["Anime"],
+                summary: "Get Anime Detail",
+                description:
+                    "Scrape Situs Anime anime detail page with Redis cache",
+                parameters: [
+                    {
+                        name: "slug",
+                        in: "path",
+                        required: true,
+                        schema: {
+                            type: "string",
                         },
+                        example: "enen-shouboutai-season-3-p2-sub-indo",
                     },
-
-                    400: {
-                        description: "Episode ID tidak valid",
+                ],
+                responses: {
+                    200: {
+                        description: "Anime detail scraped successfully",
                     },
+                    500: {
+                        description: "Internal Server Error",
+                    },
+                },
+            },
+        },
 
-                    502: {
-                        description: "Provider tidak mengembalikan data video",
+        /* ===============================
+           ANIME Streaming
+        =============================== */
+        "/anime/streaming/{slug}": {
+            get: {
+                tags: ["Anime"],
+                summary: "Get Episode Streaming + Download Links",
+                description:
+                    "Scrape Situs Anime episode page untuk mendapatkan iframe streaming, mirror provider, dan link download.",
+
+                parameters: [
+                    {
+                        name: "slug",
+                        in: "path",
+                        required: true,
+                        schema: {
+                            type: "string",
+                        },
+                        example: "nnshbti-s3-p2-episode-1-sub-indo",
+                    },
+                ],
+
+                responses: {
+                    200: {
+                        description: "Episode data scraped successfully",
+                    },
+                    500: {
+                        description: "Internal Server Error",
+                    },
+                },
+            },
+        },
+
+        /* ===============================
+           ANIME Genre
+        =============================== */
+        "/anime/genres": {
+            get: {
+                tags: ["Anime"],
+                summary: "Get Anime Genre List",
+                description:
+                    "Mengambil semua genre anime dari Situs Anime berdasarkan halaman genre-list.",
+
+                responses: {
+                    200: {
+                        description: "Genre list berhasil diambil",
                     },
 
                     500: {
-                        description: "Server error",
+                        description: "Internal Server Error",
+                    },
+                },
+            },
+        },
+
+        /* ===============================
+           ANIME Genre Detail
+        =============================== */
+        "/anime/genres/{genre}": {
+            get: {
+                tags: ["Anime"],
+                summary: "Get Anime List by Genre",
+                description:
+                    "Mengambil daftar anime berdasarkan genre tertentu dari Situs Anime, mendukung pagination.",
+
+                parameters: [
+                    {
+                        name: "genre",
+                        in: "path",
+                        required: true,
+                        schema: { type: "string" },
+                        example: "demons",
+                    },
+                    {
+                        name: "page",
+                        in: "query",
+                        required: false,
+                        schema: { type: "integer" },
+                        example: 1,
+                    },
+                ],
+
+                responses: {
+                    200: {
+                        description: "Genre anime list scraped successfully",
+                    },
+                    500: {
+                        description: "Internal Server Error",
+                    },
+                },
+            },
+        },
+
+        /* ===============================
+            ANIME Search
+         =============================== */
+        "/anime/search": {
+            get: {
+                tags: ["Anime"],
+                summary: "Search Anime Situs Anime",
+                description:
+                    "Mencari anime berdasarkan keyword dari Situs Anime (max 12 hasil).",
+
+                parameters: [
+                    {
+                        name: "q",
+                        in: "query",
+                        required: true,
+                        schema: { type: "string" },
+                        example: "tes",
+                    },
+                ],
+
+                responses: {
+                    200: {
+                        description: "Anime search result scraped successfully",
+                    },
+                    400: {
+                        description: "Query parameter missing",
                     },
                 },
             },

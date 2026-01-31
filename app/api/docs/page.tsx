@@ -10,7 +10,10 @@ const SwaggerUI = dynamic(() => import("swagger-ui-react"), {
 export default function ApiDocs() {
     return (
         <div style={{ height: "100vh" }}>
-            <SwaggerUI url="/api/swagger" />
+            <SwaggerUI
+                url="/api/swagger"
+                docExpansion="none" // ✅ semua endpoint tertutup default
+            />
         </div>
     );
 }
