@@ -1,4 +1,4 @@
-import { AnimeGenreDetailResult, AnimeGenreItem, AnimeItem, AnimeListItem, DownloadItem, EpisodeItem, GenreAnimeItem, GenreItem, MirrorItem, OtakudesuAnimeListResult, OtakudesuDetailResult, OtakudesuEpisodeResult, OtakudesuHomeResult, SearchAnimeItem } from "@/app/types/anime/anime";
+import { AnimeGenreDetailResult, AnimeGenreItem, AnimeItem, AnimeListItem, AnimeSearchResult, DownloadItem, EpisodeItem, GenreAnimeItem, GenreItem, MirrorItem, OtakudesuAnimeListResult, OtakudesuDetailResult, OtakudesuEpisodeResult, OtakudesuHomeResult, SearchAnimeItem } from "@/app/types/anime/anime";
 import { load } from "cheerio";
 
 export function scrapeAnimeList(
