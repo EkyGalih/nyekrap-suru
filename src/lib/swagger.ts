@@ -73,14 +73,14 @@ export const swaggerSpec = {
        SERVERS
     =============================== */
     servers: [
-        // {
-        //     url: "http://localhost:3000/api",
-        //     description: "Server Lokal (Development)",
-        // },
         {
-          url: "https://nyekrap-suru.vercel.app/api",
-          description: "Server Production",
+            url: "http://localhost:3000/api",
+            description: "Server Lokal (Development)",
         },
+        // {
+        //   url: "https://nyekrap-suru.vercel.app/api",
+        //   description: "Server Production",
+        // },
     ],
 
     /* ===============================
@@ -399,6 +399,26 @@ export const swaggerSpec = {
                 summary: "Ambil Homepage Anime (Ongoing + Complete)",
                 description:
                     "Mengambil daftar anime ongoing terbaru dan anime complete dari Situs Anime.",
+                responses: {
+                    200: {
+                        description: "Berhasil mengambil data anime",
+                    },
+                    500: {
+                        description: "Server error saat scraping Situs Anime",
+                    },
+                },
+            },
+        },
+
+        /* ===============================
+           ANIME LIST (Situs Anime)
+        =============================== */
+        "/anime/list-anime": {
+            get: {
+                tags: ["Anime"],
+                summary: "Ambil Daftar Anime (semua)",
+                description:
+                    "Mengambil daftar list anime dari Situs Anime.",
                 responses: {
                     200: {
                         description: "Berhasil mengambil data anime",

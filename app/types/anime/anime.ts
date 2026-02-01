@@ -118,8 +118,14 @@ export interface SearchAnimeItem {
     genres: string[];
 }
 
-export interface AnimeSearchResult {
-    query: string;
-    total_results: number;
-    anime_list: SearchAnimeItem[];
+// anime list
+export interface AnimeListItem {
+    title: string;
+    link: string;
+    endpoint: string;
+}
+
+export interface OtakudesuAnimeListResult {
+    total: number;
+    anime_list: AnimeListItem[];
 }

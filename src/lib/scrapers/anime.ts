@@ -1,5 +1,37 @@
-import { AnimeGenreDetailResult, AnimeGenreItem, AnimeItem, AnimeSearchResult, DownloadItem, EpisodeItem, GenreAnimeItem, GenreItem, MirrorItem, OtakudesuDetailResult, OtakudesuEpisodeResult, OtakudesuHomeResult, SearchAnimeItem } from "@/app/types/anime/anime";
+import { AnimeGenreDetailResult, AnimeGenreItem, AnimeItem, AnimeListItem, DownloadItem, EpisodeItem, GenreAnimeItem, GenreItem, MirrorItem, OtakudesuAnimeListResult, OtakudesuDetailResult, OtakudesuEpisodeResult, OtakudesuHomeResult, SearchAnimeItem } from "@/app/types/anime/anime";
 import { load } from "cheerio";
+
+export function scrapeAnimeList(
+    html: string
+): OtakudesuAnimeListResult {
+    const $ = load(html);
+
+    const results: AnimeListItem[] = [];
+
+    $(".penzbar a.hodebgst").each((_, el) => {
+        const title = $(el).text().trim();
+        const link = $(el).attr("href") ?? "";
+
+        // endpoint slug
+        const endpoint = link
+            .replace(`${process.env.OTAKUDESU_URL}/anime/`, "")
+            .replace("/", "")
+            .trim();
+
+        if (title && endpoint) {
+            results.push({
+                title,
+                link,
+                endpoint,
+            });
+        }
+    });
+
+    return {
+        total: results.length,
+        anime_list: results,
+    };
+}
 
 export function scrapeOtakudesuHome(html: string): OtakudesuHomeResult {
     const $ = load(html);
