@@ -1,4 +1,4 @@
-import { AnimeGenreDetailResult, AnimeGenreItem, AnimeItem, AnimeListItem, AnimeSearchResult, DownloadItem, EpisodeItem, GenreAnimeItem, GenreItem, MirrorItem, OtakudesuAnimeListResult, OtakudesuDetailResult, OtakudesuEpisodeResult, OtakudesuHomeResult, SearchAnimeItem } from "@/app/types/anime/anime";
+import { AnimeGenreDetailResult, AnimeGenreItem, AnimeItem, AnimeListItem, AnimeScheduleDay, AnimeScheduleItem, AnimeScheduleResult, AnimeSearchResult, DownloadItem, EpisodeItem, GenreAnimeItem, GenreItem, MirrorItem, OtakudesuAnimeListResult, OtakudesuDetailResult, OtakudesuEpisodeResult, OtakudesuHomeResult, SearchAnimeItem } from "@/app/types/anime/anime";
 import { load } from "cheerio";
 
 export function scrapeAnimeList(
@@ -221,6 +221,56 @@ export function scrapeOtakudesuDetail(html: string): OtakudesuDetailResult {
         first_eps,
         latest_eps,
         episode_list,
+    };
+}
+
+export function scrapeAnimeSchedule(
+    html: string
+): AnimeScheduleResult {
+    const $ = load(html);
+
+    const schedule: AnimeScheduleDay[] = [];
+
+    /* ===============================
+       LOOP SETIAP HARI
+    =============================== */
+    $(".kglist321").each((_, el) => {
+        const section = $(el);
+
+        const day = section.find("h2").first().text().trim();
+
+        // skip kalau kosong
+        if (!day) return;
+
+        const anime_list: AnimeScheduleItem[] = [];
+
+        section.find("ul li a").each((_, a) => {
+            const title = $(a).text().trim();
+            const link = $(a).attr("href") ?? "";
+
+            const endpoint = link
+                .replace(`${process.env.OTAKUDESU_URL}/anime/`, "")
+                .replace("/", "")
+                .trim();
+
+            if (title && endpoint) {
+                anime_list.push({
+                    title,
+                    link,
+                    endpoint,
+                });
+            }
+        });
+
+        schedule.push({
+            day,
+            anime_list,
+        });
+    });
+
+    return {
+        total_days: schedule.length,
+        schedule,
     };
 }
 

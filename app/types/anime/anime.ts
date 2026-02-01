@@ -136,3 +136,21 @@ export interface OtakudesuAnimeListResult {
     total: number;
     anime_list: AnimeListItem[];
 }
+
+// jadwal
+
+export interface AnimeScheduleItem {
+    title: string;
+    link: string;
+    endpoint: string;
+}
+
+export interface AnimeScheduleDay {
+    day: string;
+    anime_list: AnimeScheduleItem[];
+}
+
+export interface AnimeScheduleResult {
+    total_days: number;
+    schedule: AnimeScheduleDay[];
+}

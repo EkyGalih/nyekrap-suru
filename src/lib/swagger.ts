@@ -555,6 +555,26 @@ export const swaggerSpec = {
         },
 
         /* ===============================
+            JADWAL RILIS ANIME
+        =============================== */
+        "/anime/jadwal": {
+            get: {
+                tags: ["Anime"],
+                summary: "Ambil Jadwal Rilis Anime On-Going",
+                description:
+                    "Mengambil jadwal rilis anime ongoing berdasarkan hari (Senin-Minggu) dari Otakudesu.",
+                responses: {
+                    200: {
+                        description: "Berhasil mengambil jadwal rilis anime",
+                    },
+                    500: {
+                        description: "Server error saat scraping jadwal rilis",
+                    },
+                },
+            },
+        },
+
+        /* ===============================
             ANIME Search
          =============================== */
         "/anime/search": {
