@@ -78,8 +78,8 @@ export const swaggerSpec = {
         //     description: "Server Lokal (Development)",
         // },
         {
-          url: "https://nyekrap-suru.vercel.app/api",
-          description: "Server Production",
+            url: "https://www.mytools.web.id/api",
+            description: "Server Production",
         },
     ],
 
