@@ -4,6 +4,13 @@ import {
   MessageSquare, Layout, Database, Bot,
   ArrowRight, CheckCircle2
 } from 'lucide-react';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'DND Computer Digital Solutions | Expert Web & Software Development',
+  description: 'Spesialis pembuatan sistem custom, API Scraper (Drama, Anime, Comic), dan lisensi software resmi. Solusi teknologi tepat guna untuk bisnis Anda.',
+  keywords: ['jasa pembuatan software', 'api scraper indonesia', 'jasa laravel filament', 'jasa nextjs', 'tamanto digital'],
+};
 
 const LandingPage = () => {
   const WHATSAPP_LINK = "https://wa.me/6287700991538?text=Halo%20DND Computer,%20saya%20tertarik%20dengan%20jasanya";
