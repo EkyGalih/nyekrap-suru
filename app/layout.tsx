@@ -14,25 +14,25 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Nyekrap Suru API",
-    template: "%s | Nyekrap Suru",
+    default: "DND Computer",
+    template: "%s | DND Computer",
   },
   description:
-    "Platform REST API untuk scraping berbagai konten hiburan seperti drama, anime, manga, dan lainnya.",
+    "Spesialis pembuatan sistem custom, API (Drama, Anime, Comic), dan lisensi software resmi. Solusi teknologi tepat guna untuk bisnis Anda.",
 
-  applicationName: "Nyekrap Suru",
+  applicationName: "DND Computer",
 
   icons: {
     icon: "/favicon.ico",
   },
 
-  metadataBase: new URL("http://localhost:3000"),
+  metadataBase: new URL("http://mytools.web.id"),
 
   openGraph: {
-    title: "Nyekrap Suru API",
+    title: "DND Computer",
     description:
-      "API scraping modular untuk drama Korea, drama China, anime, manga, dan konten lainnya.",
-    url: "http://localhost:3000",
+      "Spesialis pembuatan sistem custom, API (Drama, Anime, Comic), dan lisensi software resmi. Solusi teknologi tepat guna untuk bisnis Anda.",
+    url: "https://mytools.web.id",
     siteName: "Nyekrap Suru",
     type: "website",
   },

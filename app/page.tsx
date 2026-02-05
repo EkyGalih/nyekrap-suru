@@ -8,7 +8,7 @@ import { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'DND Computer Digital Solutions | Expert Web & Software Development',
-  description: 'Spesialis pembuatan sistem custom, API Scraper (Drama, Anime, Comic), dan lisensi software resmi. Solusi teknologi tepat guna untuk bisnis Anda.',
+  description: 'Spesialis pembuatan sistem custom, API (Drama, Anime, Comic), dan lisensi software resmi. Solusi teknologi tepat guna untuk bisnis Anda.',
   keywords: ['jasa pembuatan software', 'api scraper indonesia', 'jasa laravel filament', 'jasa nextjs', 'tamanto digital'],
 };
 
