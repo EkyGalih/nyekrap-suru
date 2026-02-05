@@ -123,8 +123,9 @@ export async function GET(
                 src: link.substring(link.indexOf("https")).trim(),
             }
         })
-
+   console.log(serverJson)
         const payload = {
+            title: "Episode " + serverJson?.data?.episode,
             episode_id: id,
             tag,
             resolutions,
