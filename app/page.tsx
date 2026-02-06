@@ -1,173 +1,167 @@
 import React from 'react';
 import {
-  Code2, Terminal, ShieldCheck, Zap,
-  MessageSquare, Layout, Database, Bot,
-  ArrowRight, CheckCircle2
+  Wifi, Zap, ShieldCheck, Clock,
+  Smartphone, Router, Activity,
+  CheckCircle2, CreditCard, HelpCircle
 } from 'lucide-react';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'DND Computer Digital Solutions | Expert Web & Software Development',
-  description: 'Spesialis pembuatan sistem custom, API (Drama, Anime, Comic), dan lisensi software resmi. Solusi teknologi tepat guna untuk bisnis Anda.',
-  keywords: ['jasa pembuatan software', 'api scraper indonesia', 'jasa laravel filament', 'jasa nextjs', 'tamanto digital'],
+  title: 'DND Net | Solusi Internet RT/RW Cepat & Terpercaya',
+  description: 'Layanan internet murah untuk warga. Beli voucher otomatis 24 jam, langganan bulanan, dan jasa teknisi jaringan profesional.',
 };
 
-const LandingPage = () => {
-  const WHATSAPP_LINK = "https://wa.me/6287700991538?text=Halo%20DND Computer,%20saya%20tertarik%20dengan%20jasanya";
+const RTRWLandingPage = () => {
+  const WHATSAPP_CLIENT_CARE = "https://wa.me/6287700991538?text=Halo%20DND%20Net,%20saya%20butuh%20bantuan%20teknisi";
 
-  const services = [
-    {
-      title: "Custom Software Development",
-      desc: "Membangun sistem informasi (ERP, CRM, Dashboard) yang spesifik sesuai kebutuhan alur bisnis Anda. Bukan sekadar template.",
-      icon: <Database className="w-8 h-8 text-cyan-400" />,
-    },
-    {
-      title: "High-Performance Website",
-      desc: "Website modern menggunakan Next.js dan Tailwind CSS. Cepat, SEO-friendly, dan responsif di semua perangkat.",
-      icon: <Layout className="w-8 h-8 text-blue-400" />,
-    },
-    {
-      title: "Eksklusif API Solutions",
-      desc: "Penyedia API untuk konten Film, Drama, Anime, dan Komik dengan manajemen cache yang efisien.",
-      icon: <Terminal className="w-8 h-8 text-purple-400" />,
-    },
-    {
-      title: "Official Software License",
-      desc: "Distribusi lisensi aplikasi resmi untuk menunjang produktivitas dan legalitas operasional bisnis Anda.",
-      icon: <ShieldCheck className="w-8 h-8 text-emerald-400" />,
-    },
+  const voucherPlans = [
+    { time: "2 Jam", price: "Rp 2.000", speed: "Up to 5Mbps", icon: <Clock className="w-5 h-5" /> },
+    { time: "24 Jam", price: "Rp 5.000", speed: "Up to 5Mbps", icon: <Zap className="w-5 h-5" /> },
+    { time: "7 Hari", price: "Rp 25.000", speed: "Up to 7Mbps", icon: <Activity className="w-5 h-5" /> },
+  ];
+
+  const monthlyPlans = [
+    { name: "Home Basic", price: "Rp 150.000", features: ["Unlimited Tanpa FUP", "Free Instalasi", "Support 24/7", "Router Dipinjamkan"] },
+    { name: "Home Pro", price: "Rp 250.000", features: ["Speed Up to 20Mbps", "Prioritas Jaringan", "Free Maintenance", "Public IP Dynamic"] },
   ];
 
   return (
-    <div className="bg-slate-950 text-slate-200 min-h-screen font-sans selection:bg-cyan-500/30">
+    <div className="bg-slate-950 text-slate-200 min-h-screen font-sans selection:bg-indigo-500/30">
 
       {/* --- HERO SECTION --- */}
-      <section className="relative pt-32 pb-20 px-6 overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-cyan-900/20 via-transparent to-transparent -z-10" />
+      <section className="relative pt-32 pb-20 px-6">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent -z-10" />
 
         <div className="max-w-6xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 text-sm mb-6 animate-fade-in">
-            <Zap className="w-4 h-4" /> <span>Available for New Projects</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-400 text-sm mb-6 animate-bounce">
+            <Wifi className="w-4 h-4" /> <span>Sinyal Kuat, Harga Hemat</span>
           </div>
 
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-8">
-            Build Your Digital <br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
-              Future with DND Computer
+            Internet Tanpa Batas <br />
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400">
+              Untuk Warga Digital
             </span>
           </h1>
 
-          <p className="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto mb-12 leading-relaxed">
-            Kami membantu bisnis bertransformasi lewat software custom, optimasi website,
-            dan penyediaan infrastruktur API yang handal. Fokus pada performa dan skalabilitas.
+          <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-10">
+            Nikmati koneksi internet stabil dengan sistem pembayaran otomatis.
+            Beli voucher kapan saja, langsung aktif detik itu juga.
           </p>
 
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <a href={WHATSAPP_LINK}
-              className="flex items-center justify-center gap-2 bg-white text-slate-950 px-8 py-4 rounded-xl font-bold hover:bg-cyan-400 transition-all duration-300">
-              <MessageSquare className="w-5 h-5" /> Konsultasi Gratis
-            </a>
-            <a href="/api/docs"
-              className="flex items-center justify-center gap-2 border border-slate-700 bg-slate-900/50 px-8 py-4 rounded-xl font-bold hover:border-cyan-500 transition-all">
-              <Code2 className="w-5 h-5" /> Lihat Dokumentasi API
+          <div className="flex flex-wrap justify-center gap-4">
+            <button className="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-4 rounded-xl font-bold transition-all flex items-center gap-2">
+              <CreditCard className="w-5 h-5" /> Beli Voucher Otomatis
+            </button>
+            <a href="#langganan" className="border border-slate-700 bg-slate-900/50 px-8 py-4 rounded-xl font-bold hover:border-indigo-500 transition-all">
+              Daftar Bulanan
             </a>
           </div>
         </div>
       </section>
 
-      {/* --- SERVICES SECTION --- */}
-      <section className="py-24 px-6 bg-slate-900/50">
+      {/* --- VOUCHER SECTION --- */}
+      <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-16">
-            <h2 className="text-3xl font-bold text-white mb-4">Our Expertise</h2>
-            <div className="h-1 w-20 bg-cyan-500 rounded-full" />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {services.map((item, idx) => (
-              <div key={idx} className="group p-8 rounded-2xl border border-slate-800 bg-slate-950 hover:border-cyan-500/50 transition-all">
-                <div className="mb-6 p-3 bg-slate-900 w-fit rounded-lg group-hover:scale-110 transition-transform">
-                  {item.icon}
+          <h2 className="text-3xl font-bold text-white mb-10 text-center">Pilihan Voucher Hotspot</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {voucherPlans.map((v, i) => (
+              <div key={i} className="bg-slate-900 border border-slate-800 p-6 rounded-2xl hover:border-indigo-500 transition-all text-center">
+                <div className="bg-indigo-500/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-400">
+                  {v.icon}
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
-                <p className="text-slate-400 leading-relaxed mb-6">{item.desc}</p>
-                <div className="flex items-center gap-2 text-sm text-cyan-400 font-medium">
-                  Learn more <ArrowRight className="w-4 h-4" />
-                </div>
+                <h3 className="text-2xl font-bold text-white">{v.time}</h3>
+                <p className="text-indigo-400 font-mono text-xl my-2">{v.price}</p>
+                <p className="text-sm text-slate-500 mb-6">{v.speed}</p>
+                <button className="w-full py-3 bg-slate-800 hover:bg-indigo-600 rounded-lg font-semibold transition-colors">
+                  Pilih Paket
+                </button>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* --- WHY US SECTION (Content Enrichment) --- */}
-      <section className="py-24 px-6">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+      {/* --- SERVICES (Jasa Pasang & Perbaikan) --- */}
+      <section className="py-24 px-6 bg-slate-900/30 border-y border-slate-900">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
           <div>
-            <h2 className="text-4xl font-bold text-white mb-6">Mengapa Memilih DND Computer?</h2>
+            <h2 className="text-4xl font-bold text-white mb-6">Layanan Teknisi Profesional</h2>
             <p className="text-slate-400 mb-8 leading-relaxed">
-              Kami tidak hanya sekadar koding. Kami memastikan setiap baris kode yang kami tulis
-              memberikan nilai tambah bagi efisiensi bisnis Anda.
+              Bukan hanya voucher, kami menyediakan solusi infrastruktur jaringan di rumah atau kos-kosan Anda.
             </p>
-            <ul className="space-y-4">
-              {[
-                "Source Code Bersih & Mudah Dirawat",
-                "Teknologi Terbaru (Laravel 11, Next.js 14)",
-                "Keamanan Data & Enkripsi API",
-                "Dukungan Teknis & Maintenance Berkelanjutan"
-              ].map((text, i) => (
-                <li key={i} className="flex items-center gap-3 text-slate-300">
-                  <CheckCircle2 className="w-5 h-5 text-cyan-500" /> {text}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="bg-gradient-to-br from-cyan-900/40 to-blue-900/40 p-1 rounded-3xl">
-            <div className="bg-slate-950 rounded-[22px] p-8 border border-white/5">
-              <div className="space-y-6">
-                <div className="flex items-center gap-4 border-b border-slate-800 pb-4">
-                  <Bot className="text-cyan-400 w-10 h-10" />
-                  <div>
-                    <p className="text-white font-bold">Smart Scraping API</p>
-                    <p className="text-xs text-slate-500">Ready-to-use endpoint</p>
-                  </div>
+            <div className="space-y-6">
+              <div className="flex gap-4">
+                <div className="bg-cyan-500/20 p-3 rounded-lg h-fit"><Router className="text-cyan-400" /></div>
+                <div>
+                  <h4 className="text-white font-bold">Pasang Baru (ISP)</h4>
+                  <p className="text-sm text-slate-400">Instalasi kabel fiber optic/wireless dengan perangkat standar industri.</p>
                 </div>
-                <pre className="text-xs font-mono text-cyan-300 overflow-x-auto">
-                  {`GET /api/v1/drama/search?q=DND Computer
-{
-  "status": "success",
-  "data": {
-    "title": "Professional Service",
-    "delivery": "High Speed"
-  }
-}`}
-                </pre>
               </div>
+              <div className="flex gap-4">
+                <div className="bg-emerald-500/20 p-3 rounded-lg h-fit"><ShieldCheck className="text-emerald-400" /></div>
+                <div>
+                  <h4 className="text-white font-bold">Perbaikan Jaringan</h4>
+                  <p className="text-sm text-slate-400">Optimasi WiFi lemot, setting ulang router, atau perapihan kabel.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="langganan" className="bg-gradient-to-br from-indigo-600 to-blue-700 p-8 rounded-3xl shadow-2xl">
+            <h3 className="text-2xl font-bold text-white mb-6">Paket Bulanan (Rumahan)</h3>
+            <div className="space-y-4">
+              {monthlyPlans.map((p, i) => (
+                <div key={i} className="bg-white/10 backdrop-blur-md p-5 rounded-xl border border-white/10">
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="font-bold text-lg">{p.name}</span>
+                    <span className="text-white font-mono">{p.price}<small>/bln</small></span>
+                  </div>
+                  <ul className="text-sm space-y-2">
+                    {p.features.map((f, j) => (
+                      <li key={j} className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> {f}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* --- CTA SECTION --- */}
-      <section className="py-20 px-6 border-t border-slate-900 text-center">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-white mb-6">Siap Memulai Proyek Anda?</h2>
-          <p className="text-slate-400 mb-10">
-            Diskusikan kebutuhan software atau integrasi API Anda sekarang.
-            Gratis konsultasi teknis tanpa dipungut biaya.
-          </p>
-          <a href={WHATSAPP_LINK}
-            className="inline-flex items-center gap-3 bg-cyan-600 hover:bg-cyan-500 text-white px-10 py-4 rounded-xl font-bold transition-all transform hover:scale-105 shadow-lg shadow-cyan-500/20">
-            Hubungi via WhatsApp <MessageSquare className="w-5 h-5" />
-          </a>
+      {/* --- FOOTER & LINKS --- */}
+      <footer className="py-20 px-6 border-t border-slate-900">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10">
+          <div className="col-span-1 md:col-span-2">
+            <div className="flex items-center gap-2 text-white font-bold text-2xl mb-4">
+              <Wifi className="text-indigo-500" /> DND NET
+            </div>
+            <p className="text-slate-500 max-w-sm">
+              Memberdayakan ekonomi warga melalui konektivitas digital yang stabil dan terjangkau.
+            </p>
+          </div>
+          <div>
+            <h4 className="text-white font-bold mb-4">Perusahaan</h4>
+            <ul className="text-slate-400 space-y-2 text-sm">
+              <li><a href="/about" className="hover:text-indigo-400">Tentang Kami</a></li>
+              <li><a href="/terms" className="hover:text-indigo-400">Syarat & Ketentuan</a></li>
+              <li><a href="/privacy" className="hover:text-indigo-400">Kebijakan Privasi</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-white font-bold mb-4">Bantuan</h4>
+            <ul className="text-slate-400 space-y-2 text-sm">
+              <li><a href={WHATSAPP_CLIENT_CARE} className="hover:text-indigo-400">Hubungi Teknisi</a></li>
+              <li><a href="#" className="hover:text-indigo-400">Cara Bayar</a></li>
+              <li><a href="#" className="hover:text-indigo-400">Cek Status Jaringan</a></li>
+            </ul>
+          </div>
         </div>
-      </section>
-
-      <footer className="py-10 text-center text-slate-600 text-sm border-t border-slate-900">
-        <p>&copy; {new Date().getFullYear()} DND Computer Digital. Built with Next.js & ❤️.</p>
+        <div className="max-w-6xl mx-auto mt-16 pt-8 border-t border-slate-900 text-center text-slate-600 text-xs">
+          <p>&copy; {new Date().getFullYear()} DND Net (DND Computer Group). All rights reserved.</p>
+        </div>
       </footer>
     </div>
   );
 };
 
-export default LandingPage;
+export default RTRWLandingPage;
