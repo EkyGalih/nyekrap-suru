@@ -7,7 +7,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const WHATSAPP_LINK = "https://wa.me/6287700991538";
 
   return (
-    <html lang="id" className="scroll-smooth">
+    <html lang="id" className="scroll-smooth" suppressHydrationWarning>
       <body className="bg-slate-950 text-slate-200 font-sans">
         {/* NAVBAR */}
         <nav className="fixed w-full z-50 bg-slate-950/80 backdrop-blur-md border-b border-slate-900">
@@ -49,7 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
             <div>
               <h4 className="text-white font-bold mb-4 text-sm uppercase tracking-widest">Kontak</h4>
-              <p className="text-slate-500 text-sm">Lombok & Sumbawa, NTB</p>
+              <p className="text-slate-500 text-sm">Terong Tawah, Labuapi & Gunung Sari, NTB</p>
               <p className="text-slate-500 text-sm">WhatsApp: +62 877-0099-1538</p>
             </div>
           </div>
