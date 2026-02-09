@@ -1,79 +1,91 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server"
+import { withAuth } from "@/src/lib/withAuth"
+import { proxyFetchHTML } from "@/src/lib/proxyFetch"
+import { redis } from "@/src/lib/redisCache"
+import { scrapeOtakudesuEpisode } from "@/src/lib/scrapers/anime"
+import { getErrorMessage } from "@/src/lib/getErrorMessage"
 
-import { withAuth } from "@/src/lib/withAuth";
-import { proxyFetchHTML } from "@/src/lib/proxyFetch";
-import { redis } from "@/src/lib/redisCache";
-import { scrapeOtakudesuEpisode } from "@/src/lib/scrapers/anime";
-import { getErrorMessage } from "@/src/lib/getErrorMessage";
+export const runtime = "nodejs"
 
-export const runtime = "nodejs";
+// TTL settings
+const CACHE_TTL = 60 * 60        // 1 jam
+const FAIL_TTL = 60 * 5          // 5 menit
 
 export const GET = withAuth(
-    async (
-        _req,
-        { params }: { params: Promise<{ slug: string }> }
-    ) => {
-        try {
-            // ✅ WAJIB await params
-            const { slug } = await params;
+  async (_req, { params }: { params: Promise<{ slug: string }> }) => {
+    try {
+      const { slug } = await params
 
-            if (!slug) {
-                return NextResponse.json(
-                    { message: "error", error: "Slug wajib ada" },
-                    { status: 400 }
-                );
-            }
+      if (!slug) {
+        return NextResponse.json(
+          { message: "error", error: "Slug wajib ada" },
+          { status: 400 }
+        )
+      }
 
-            const cacheKey = `anime:streaming:${slug}`;
+      const normalizedSlug = slug.trim().toLowerCase()
 
-            /* ===============================
-               ✅ CACHE CHECK
-            =============================== */
-            const cached = await redis.get(cacheKey);
+      const cacheKey = `anime:streaming:${normalizedSlug}`
+      const failKey = `anime:streaming:fail:${normalizedSlug}`
 
-            if (cached) {
-                return NextResponse.json({
-                    message: "success (cache)",
-                    data: cached,
-                });
-            }
+      /* ===============================
+         🚫 NEGATIVE CACHE CHECK
+      =============================== */
+      const failedRecently = await redis.get(failKey)
+      if (failedRecently) {
+        return NextResponse.json(
+          { message: "streaming temporarily unavailable" },
+          { status: 503 }
+        )
+      }
 
-            /* ===============================
-               ✅ FETCH HTML
-            =============================== */
-            const url = `${process.env.OTAKUDESU_URL}/episode/${slug}/`;
+      /* ===============================
+         ⚡ CACHE HIT
+      =============================== */
+      const cached = await redis.get(cacheKey)
+      if (cached) {
+        return NextResponse.json({
+          message: "success (cache)",
+          data: cached,
+        })
+      }
 
-            const html = await proxyFetchHTML(url);
+      /* ===============================
+         🌐 FETCH HTML
+      =============================== */
+      const url = `${process.env.OTAKUDESU_URL}/episode/${normalizedSlug}/`
+      const html = await proxyFetchHTML(url)
 
-            /* ===============================
-               ✅ SCRAPE RESULT
-            =============================== */
-            const result = scrapeOtakudesuEpisode(html);
+      /* ===============================
+         🧠 SCRAPE
+      =============================== */
+      const result = scrapeOtakudesuEpisode(html)
 
-            // ❌ Jangan cache kalau kosong
-            if (!result.streaming_iframe) {
-                throw new Error("Scraper gagal ambil iframe (HTML berubah / diblok)");
-            }
+      // ❌ jangan cache kalau iframe kosong
+      if (!result.streaming_iframe) {
+        await redis.set(failKey, true, { ex: FAIL_TTL })
+        throw new Error("Iframe streaming tidak ditemukan")
+      }
 
-            /* ===============================
-               ✅ SAVE CACHE (1 jam)
-            =============================== */
-            await redis.set(cacheKey, result, {
-                ex: 3600,
-            });
+      /* ===============================
+         💾 SAVE CACHE
+      =============================== */
+      await redis.set(cacheKey, result, {
+        ex: CACHE_TTL,
+      })
 
-            return NextResponse.json({
-                message: "success",
-                data: result,
-            });
-        } catch (err: unknown) {
-            return NextResponse.json(
-                {
-                    message: "error",
-                    error: getErrorMessage(err),
-                },
-                { status: 500 }
-            );
-        }
+      return NextResponse.json({
+        message: "success",
+        data: result,
+      })
+    } catch (err: unknown) {
+      return NextResponse.json(
+        {
+          message: "error",
+          error: getErrorMessage(err),
+        },
+        { status: 500 }
+      )
     }
-);
+  }
+)

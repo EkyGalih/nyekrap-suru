@@ -1,65 +1,29 @@
-import { NextResponse } from "next/server";
-
+import { NextResponse } from "next/server"
+import { prisma } from "@/src/lib/prisma"
 import { withAuth } from "@/src/lib/withAuth";
-import { proxyFetchHTML } from "@/src/lib/proxyFetch";
-import { getErrorMessage } from "@/src/lib/getErrorMessage";
-import { redis } from "@/src/lib/redisCache";
-import { scrapeOtakudesuHome } from "@/src/lib/scrapers/anime";
 
-
-export const runtime = "nodejs";
+export const runtime = "nodejs"
 
 export const GET = withAuth(async () => {
-    try {
-        const cacheKey = "otakudesu:homepage";
+  const cacheKey = "anime:home"
+  const cache = await prisma.scrapeCache.findUnique({ where: { cacheKey } })
 
-        /* ===============================
-           ✅ Redis Cache Check
-        =============================== */
-        const cached = await redis.get(cacheKey);
+  if (!cache) {
+    return NextResponse.json({ message: "cache empty, run cron first" }, { status: 503 })
+  }
 
-        if (cached) {
-            console.log("⚡ OTAKUDESU CACHE HIT");
+  const now = new Date()
+  if (cache.expiresAt <= now) {
+    return NextResponse.json({ message: "cache expired, run cron" }, { status: 503 })
+  }
 
-            return NextResponse.json({
-                message: "success (cache)",
-                data: cached,
-            });
-        }
-
-        console.log("🔥 OTAKUDESU CACHE MISS → SCRAPING");
-
-        /* ===============================
-           ✅ Fetch HTML via Proxy
-        =============================== */
-        const targetUrl = `${process.env.OTAKUDESU_URL}`;
-        const html = await proxyFetchHTML(targetUrl);
-
-        /* ===============================
-           ✅ Scrape Result
-        =============================== */
-        const result = scrapeOtakudesuHome(html);
-
-        /* ===============================
-           ✅ Save Cache (6 jam)
-        =============================== */
-        await redis.set(cacheKey, result, {
-            ex: 21600,
-        });
-
-        console.log("✅ OTAKUDESU HOMEPAGE SAVED");
-
-        return NextResponse.json({
-            message: "success",
-            data: result,
-        });
-    } catch (err: unknown) {
-        return NextResponse.json(
-            {
-                message: "error",
-                error: getErrorMessage(err),
-            },
-            { status: 500 }
-        );
-    }
+  return NextResponse.json({
+    message: "success",
+    // meta: {
+    //   cacheKey,
+    //   scrapedAt: cache.scrapedAt?.toISOString?.() ?? null,
+    //   expiresAt: cache.expiresAt.toISOString(),
+    // },
+    data: cache.data,
+  })
 });

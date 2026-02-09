@@ -1,0 +1,18 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model ScrapeCache {
+  id        Int      @id @default(autoincrement())
+  endpoint  String
+  cacheKey  String   @unique
+  data      Json
+  scrapedAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([endpoint])
+}

@@ -1,85 +1,33 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server"
+import { withAuth } from "@/src/lib/withAuth"
 
-import { withAuth } from "@/src/lib/withAuth";
-import { proxyFetchHTML } from "@/src/lib/proxyFetch";
-import { redis } from "@/src/lib/redisCache";
-import { getErrorMessage } from "@/src/lib/getErrorMessage";
-import { scrapeAnimeGenreDetail } from "@/src/lib/scrapers/anime";
+import { getOrScrape } from "@/src/lib/anime/getOrScrape"
+import { proxyFetchHTML } from "@/src/lib/proxyFetch"
+import { scrapeAnimeGenreDetail } from "@/src/lib/scrapers/anime"
 
-export const runtime = "nodejs";
+export const runtime = "nodejs"
 
-export const GET = withAuth(async (req, context) => {
-  try {
-    /* ===============================
-       ✅ Params Fix (Next 15+)
-    =============================== */
-    const { genre } = await context.params;
+export const GET = withAuth(async (_req, context) => {
+  // ✅ Next.js 15+ params fix
+  const { genre } = await context.params
 
-    /* ===============================
-       ✅ Query Page
-    =============================== */
-    const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get("page") ?? "1");
+  const data = await getOrScrape({
+    cacheKey: `animes:genre:${genre}:page:1`,
+    endpoint: `/genres/${genre}/`,
+    ttl: 60 * 60 * 24, // ✅ 1 hari
+    allowStaleOnError: true,
 
-    /* ===============================
-       ✅ Cache Key
-    =============================== */
-    const cacheKey = `animes:genre:${genre}:page:${page}`;
+    scraper: async () => {
+      const url = `${process.env.OTAKUDESU_URL}/genres/${genre}/`
+      const html = await proxyFetchHTML(url)
+      return scrapeAnimeGenreDetail(html, genre, 1)
+    },
+  })
 
-    /* ===============================
-       ✅ Redis Cache Check
-    =============================== */
-    const cached = await redis.get(cacheKey);
-
-    if (cached) {
-      console.log("⚡ GENRE CACHE HIT");
-
-      return NextResponse.json({
-        message: "success (cache)",
-        data: cached,
-      });
-    }
-
-    console.log("🔥 GENRE CACHE MISS → SCRAPING");
-
-    /* ===============================
-       ✅ Target URL
-    =============================== */
-    const targetUrl =
-      page === 1
-        ? `${process.env.OTAKUDESU_URL}/genres/${genre}/`
-        : `${process.env.OTAKUDESU_URL}/genres/${genre}/page/${page}/`;
-
-    /* ===============================
-       ✅ Fetch HTML via Proxy
-    =============================== */
-    const html = await proxyFetchHTML(targetUrl);
-
-    /* ===============================
-       ✅ Scrape Result
-    =============================== */
-    const result = scrapeAnimeGenreDetail(html, genre, page);
-
-    /* ===============================
-       ✅ Save Cache (12 jam)
-    =============================== */
-    await redis.set(cacheKey, result, {
-      ex: 43200,
-    });
-
-    console.log("✅ GENRE SAVED");
-
-    return NextResponse.json({
-      message: "success",
-      data: result,
-    });
-  } catch (err: unknown) {
-    return NextResponse.json(
-      {
-        message: "error",
-        error: getErrorMessage(err),
-      },
-      { status: 500 }
-    );
-  }
-});
+  return NextResponse.json({
+    message: "cron ok",
+    genre,
+    page: 1,
+    data,
+  })
+})
