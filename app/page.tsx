@@ -13,7 +13,7 @@ import { Metadata } from 'next';
 
 const RTRWLandingPage = () => {
   const WHATSAPP_CLIENT_CARE = "https://wa.me/6287700991538?text=Halo%20DND%20Net,%20saya%20butuh%20bantuan%20teknisi";
-  const [showRecheck, setShowRecheck] = useState(false)
+
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [isCheckout, setIsCheckout] = useState(false);
 
@@ -32,32 +32,9 @@ const RTRWLandingPage = () => {
   ];
 
   // Fungsi Checkout (Simulasi ke DOKU)
-  const handlePayment = async () => {
-    if (!selectedPlan) return;
-
-    try {
-      const res = await fetch("/api/payments/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          packageType: selectedPlan.time, // atau map ke kode internal
-          amount: selectedPlan.price
-        }),
-      });
-
-      const json = await res.json();
-
-      if (!json.success) {
-        alert(json.error || "Gagal membuat pembayaran");
-        return;
-      }
-
-      // 🔥 INI KUNCINYA
-      window.location.href = json.redirect_url;
-
-    } catch (err) {
-      alert("Gagal terhubung ke server pembayaran");
-    }
+  const handlePayment = () => {
+    alert(`Mengarahkan ke Gateway Pembayaran untuk paket ${selectedPlan.time}...`);
+    // Di sini nanti panggil API integrasi DOKU-mu
   };
 
   if (isCheckout) return <CheckoutPage plan={selectedPlan} onBack={() => setIsCheckout(false)} onPay={handlePayment} />;
@@ -99,14 +76,6 @@ const RTRWLandingPage = () => {
 
       {/* --- VOUCHER GRID --- */}
       <section className="py-10 px-6">
-        <div className="max-w-6xl mx-auto px-6 flex justify-end mb-4">
-          <button
-            onClick={() => setShowRecheck(true)}
-            className="text-xs font-bold uppercase tracking-widest text-indigo-400 hover:text-indigo-300 border border-indigo-500/30 px-4 py-2 rounded-full transition-all"
-          >
-            Sudah Bayar?
-          </button>
-        </div>
         <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {voucherPlans.map((v) => (
             <div key={v.id} className="group bg-slate-900 border border-slate-800 p-6 rounded-2xl hover:border-indigo-500 transition-all">
@@ -155,9 +124,6 @@ const RTRWLandingPage = () => {
             </button>
           </div>
         </div>
-      )}
-      {showRecheck && (
-        <RecheckModal onClose={() => setShowRecheck(false)} />
       )}
 
       {/* --- SERVICES (Jasa Pasang & Perbaikan) --- */}
@@ -264,83 +230,3 @@ const CheckoutPage = ({ plan, onBack, onPay }: any) => {
 };
 
 export default RTRWLandingPage;
-
-const RecheckModal = ({ onClose }: { onClose: () => void }) => {
-  const [inv, setInv] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-
-  const handleRecheck = async () => {
-    if (!inv) {
-      setError("Masukkan Invoice / Merchant Ref")
-      return
-    }
-
-    setLoading(true)
-    setError("")
-
-    try {
-      const res = await fetch("/api/payments/recheck", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ merchant_ref: inv })
-      })
-
-      const json = await res.json()
-
-      if (!json.success) {
-        setError(json.error || "Gagal cek pembayaran")
-        return
-      }
-
-      // 🔥 kalau sudah PAID → ke halaman success
-      window.location.href = `/payments/success?merchant_ref=${inv}`
-
-    } catch {
-      setError("Gagal terhubung ke server")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-[80] bg-black/70 backdrop-blur-sm flex items-center justify-center p-6">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-sm p-6 relative animate-in fade-in zoom-in duration-200">
-
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 hover:bg-slate-800 rounded-full"
-        >
-          <X />
-        </button>
-
-        <h3 className="text-xl font-bold text-white mb-2">
-          Cek Pembayaran Manual
-        </h3>
-
-        <p className="text-sm text-slate-400 mb-6">
-          Masukkan Invoice / Merchant Ref (contoh: <span className="font-mono">INV-AB12CD</span>)
-        </p>
-
-        <input
-          value={inv}
-          onChange={(e) => setInv(e.target.value.toUpperCase())}
-          placeholder="INV-XXXXXX"
-          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white outline-none focus:border-indigo-500 transition-all mb-4 font-mono"
-        />
-
-        {error && (
-          <div className="text-red-400 text-xs mb-4">{error}</div>
-        )}
-
-        <button
-          onClick={handleRecheck}
-          disabled={loading}
-          className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold transition-all disabled:opacity-50"
-        >
-          {loading ? "Mengecek..." : "Cek Pembayaran"}
-        </button>
-      </div>
-    </div>
-  )
-}
