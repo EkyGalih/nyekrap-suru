@@ -9,11 +9,10 @@ datasource db {
 model ScrapeCache {
   id        Int      @id @default(autoincrement())
   endpoint  String
-  cacheKey  String   @unique @map("cachekey")
+  cacheKey  String   @unique
   data      Json
-  scrapedAt DateTime @default(now()) @map("scrapedat")
-  expiresAt DateTime @map("expiresat")
+  scrapedAt DateTime @default(now())
+  expiresAt DateTime
 
   @@index([endpoint])
-  @@map("ScrapeCache")
 }
