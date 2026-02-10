@@ -11,8 +11,8 @@ model ScrapeCache {
   endpoint  String
   cacheKey  String   @unique
   data      Json
-  scrapedAt DateTime @default(now())
-  expiresAt DateTime
+  scrapedAt DateTime @default(now()) @db.Timestamp(6)
+  expiresAt DateTime @db.Timestamp(6)
 
   @@index([endpoint])
 }

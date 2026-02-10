@@ -16,7 +16,7 @@ export async function GET(req: Request) {
     }
 
     const data = await getOrScrape({
-        cacheKey: "otakudesu:home",
+        cacheKey: "anime:home",
         endpoint: "/",
         ttl: 60 * 60 * 24,
         scraper: async () => {
