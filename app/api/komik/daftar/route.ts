@@ -28,7 +28,7 @@ export const GET = withAuth(async (req: Request) => {
 
         if (tipe) params.set("tipe", tipe)
         if (huruf) params.set("huruf", huruf)
-        if (page > 1) params.set("halaman", page)
+        if (page > 1) params.set("halaman", String(page))
 
         const url = `${baseUrl}?${params.toString()}`
 
