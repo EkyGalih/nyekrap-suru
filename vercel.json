@@ -3,6 +3,18 @@
     { "path": "/api/cron/anime/homepage", "schedule": "0 0 * * *" },
     { "path": "/api/cron/anime/genres", "schedule": "0 0 * * 1" },
     { "path": "/api/cron/anime/list", "schedule": "0 0 * * 0" },
-    { "path": "/api/cron/anime/jadwal", "schedule": "0 0 * * *" }
+    { "path": "/api/cron/anime/jadwal", "schedule": "0 0 * * *" },
+    {
+      "path": "/api/cron/komiku/popular-all",
+      "schedule": "0 0 */3 * *"
+    },
+    {
+      "path": "/api/cron/komik/updated-all",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/komik/genres",
+      "schedule": "0 0 * * 0"
+    }
   ]
 }

@@ -73,14 +73,14 @@ export const swaggerSpec = {
        SERVERS
     =============================== */
     servers: [
-        // {
-        //     url: "http://localhost:3000/api",
-        //     description: "Server Lokal (Development)",
-        // },
         {
-            url: "https://www.mytools.web.id/api",
-            description: "Server Production",
+            url: "http://localhost:3000/api",
+            description: "Server Lokal (Development)",
         },
+        // {
+        //     url: "https://www.mytools.web.id/api",
+        //     description: "Server Production",
+        // },
     ],
 
     /* ===============================
@@ -94,6 +94,10 @@ export const swaggerSpec = {
         {
             name: "Anime",
             description: "Endpoint scraping anime ongoing & complete dari Situs Anime",
+        },
+        {
+            name: "Komik",
+            description: "Endpoint scraping komik manga, manhwa dan manhua",
         },
     ],
 
@@ -604,5 +608,284 @@ export const swaggerSpec = {
                 },
             },
         },
+
+        "/komik/daftar": {
+            get: {
+                tags: ["Komik"],
+                summary: "Get daftar komik",
+                security: [
+                    {
+                        ApiKeyAuth: [],
+                    },
+                ],
+                parameters: [
+                    {
+                        name: "tipe",
+                        in: "query",
+                        required: false,
+                        schema: {
+                            type: "string",
+                            enum: ["manga", "manhwa", "manhua"],
+                        },
+                    },
+                    {
+                        name: "huruf",
+                        in: "query",
+                        required: false,
+                        schema: {
+                            type: "string",
+                            description: "A-Z",
+                        },
+                    },
+                    {
+                        name: "page",
+                        in: "query",
+                        required: false,
+                        schema: {
+                            type: "integer",
+                            default: 1,
+                        },
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: "Success",
+                    },
+                    401: {
+                        description: "Unauthorized",
+                    },
+                },
+            },
+        },
+
+        /* ===============================
+   KOMIK POPULAR (KOMIKU)
+=============================== */
+        "/komik/popular": {
+            get: {
+                tags: ["Komik"],
+                summary: "Ambil Komik Popular (Komiku)",
+                description:
+                    "Mengambil daftar komik popular dari Komiku yang sudah disimpan di cache/database.",
+                parameters: [
+                    {
+                        name: "tipe",
+                        in: "query",
+                        schema: {
+                            type: "string",
+                            example: ["manga", "manhwa", "manhua"],
+                        },
+                        required: false,
+                        example: "manga",
+                    },
+                    {
+                        name: "page",
+                        in: "query",
+                        schema: {
+                            type: "integer",
+                            minimum: 1
+                        },
+                        required: false,
+                        example: 1
+                    }
+                ],
+                responses: {
+                    200: {
+                        description: "Berhasil mengambil daftar komik popular",
+                    },
+                    503: {
+                        description: "Cache kosong, cron belum dijalankan",
+                    },
+                },
+            },
+        },
+
+        "/komik/updated": {
+            get: {
+                tags: ["Komik"],
+                summary: "Ambil Komik Updated (Komiku)",
+                description:
+                    "Mengambil daftar komik updated dari Komiku yang sudah disimpan di cache/database.",
+                parameters: [
+                    {
+                        name: "tipe",
+                        in: "query",
+                        schema: {
+                            type: "string",
+                            example: ["manga", "manhwa", "manhua"],
+                        },
+                        required: false,
+                        example: "manga",
+                    },
+                    {
+                        name: "page",
+                        in: "query",
+                        schema: {
+                            type: "integer",
+                            minimum: 1
+                        },
+                        required: false,
+                        example: 1
+                    }
+                ],
+                responses: {
+                    200: {
+                        description: "Berhasil mengambil daftar komik popular",
+                    },
+                    503: {
+                        description: "Cache kosong, cron belum dijalankan",
+                    },
+                },
+            },
+        },
+
+        "/komik/search": {
+            get: {
+                tags: ["Komik"],
+                summary: "Search komik",
+                parameters: [
+                    {
+                        name: "q",
+                        in: "query",
+                        required: true,
+                        schema: {
+                            type: "string",
+                        },
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: "Success",
+                    },
+                    400: {
+                        description: "Query required",
+                    },
+                    401: {
+                        description: "Unauthorized",
+                    },
+                },
+            },
+        },
+
+        "/komik/{endpoint}": {
+            get: {
+                summary: "Get Detail Komik",
+                description: "Mengambil detail komik berdasarkan endpoint slug.",
+                tags: ["Komik"],
+                parameters: [
+                    {
+                        name: "endpoint",
+                        in: "path",
+                        required: true,
+                        schema: {
+                            type: "string"
+                        },
+                        example: "tensei-shite-high-elf-ni-narimashitaga-slow-life-wa-120-nen-de-akimashita"
+                    }
+                ],
+                responses: {
+                    200: {
+                        description: "Success",
+                    },
+                    400: {
+                        description: "Endpoint required"
+                    },
+                    500: {
+                        description: "Internal Server Error"
+                    }
+                }
+            }
+        },
+
+        "/komik/chapter/{endpoint}": {
+            get: {
+                tags: ["Komik"],
+                summary: "Get Chapter Detail",
+                description: "Mengambil detail chapter beserta daftar gambar",
+                parameters: [
+                    {
+                        name: "endpoint",
+                        in: "path",
+                        required: true,
+                        schema: {
+                            type: "string"
+                        },
+                        example: "tensei-shite-high-elf-ni-narimashitaga-slow-life-wa-120-nen-de-akimashita-chapter-1"
+                    }
+                ],
+                responses: {
+                    200: {
+                        description: "Success",
+                    },
+                    400: {
+                        description: "Bad Request"
+                    },
+                    500: {
+                        description: "Server Error"
+                    }
+                }
+            }
+        },
+
+        "/komik/genres": {
+            get: {
+                tags: ["Komik"],
+                summary: "Get all komik genres (cached)",
+                responses: {
+                    200: {
+                        description: "Success",
+                    },
+                    401: {
+                        description: "Unauthorized",
+                    },
+                    503: {
+                        description: "Cache empty, run cron first",
+                    },
+                },
+            },
+        },
+
+        "/komik/genre/{endpoint}": {
+            get: {
+                summary: "Get manga by genre",
+                tags: ["Komik"],
+                description: "Scrape komik berdasarkan genre dengan optional tipe",
+                parameters: [
+                    {
+                        name: "endpoint",
+                        in: "path",
+                        required: true,
+                        schema: {
+                            type: "string"
+                        },
+                        example: "historical"
+                    },
+                    {
+                        name: "tipe",
+                        in: "query",
+                        required: false,
+                        schema: {
+                            type: "string",
+                            enum: ["manga", "manhwa", "manhua"]
+                        },
+                        example: "manhwa"
+                    }
+                ],
+                responses: {
+                    200: {
+                        description: "Success",
+                    },
+                    400: {
+                        description: "Invalid parameter"
+                    },
+                    401: {
+                        description: "Unauthorized"
+                    },
+                    500: {
+                        description: "Server error"
+                    }
+                }
+            }
+        }
     },
 };
