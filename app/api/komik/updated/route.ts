@@ -25,7 +25,7 @@ export const GET = withAuth(async (req: Request) => {
         message: "success",
         tipe,
         page,
-        total: data.length,
+        total: (data as any[]).length,
         data,
     })
 })
