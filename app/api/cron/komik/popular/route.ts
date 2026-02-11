@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getOrScrape } from "@/src/lib/anime/getOrScrape"
 import { proxyFetchHTML } from "@/src/lib/proxyFetch"
 import { scrapeHotKomiku } from "@/src/lib/scrapers/komik"
+import { fetchHTML } from "@/src/lib/fetchHtml"
 
 export const runtime = "nodejs"
 
@@ -11,7 +12,7 @@ export async function GET(req: Request) {
   if (secret !== process.env.CRON_SECRET) {
     return new Response("Unauthorized", { status: 401 })
   }
-  
+
   const { searchParams } = new URL(req.url)
 
   const tipe = searchParams.get("tipe") ?? "manga"
@@ -28,11 +29,12 @@ export async function GET(req: Request) {
 
   const data = await getOrScrape({
     cacheKey,
-    endpoint: `/komik/popular/${tipe}/${page}`,
-    ttl: 60 * 60 * 6, // 6 jam
+    endpoint: `/komik/${tipe}/popular`,
+    ttl: 60 * 60 * 24 * 4,
     allowStaleOnError: true,
     scraper: async () => {
-      const html = await proxyFetchHTML(url)
+      // const html = await proxyFetchHTML(url)
+      const html = await fetchHTML(url)
       return scrapeHotKomiku(html)
     },
   })

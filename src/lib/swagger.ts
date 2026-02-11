@@ -73,14 +73,14 @@ export const swaggerSpec = {
        SERVERS
     =============================== */
     servers: [
-        {
-            url: "http://localhost:3000/api",
-            description: "Server Lokal (Development)",
-        },
         // {
-        //     url: "https://www.mytools.web.id/api",
-        //     description: "Server Production",
+        //     url: "http://localhost:3000/api",
+        //     description: "Server Lokal (Development)",
         // },
+        {
+            url: "https://www.mytools.web.id/api",
+            description: "Server Production",
+        },
     ],
 
     /* ===============================
@@ -767,7 +767,7 @@ export const swaggerSpec = {
             },
         },
 
-        "/komik/{endpoint}": {
+        "/komik/detail/{endpoint}": {
             get: {
                 summary: "Get Detail Komik",
                 description: "Mengambil detail komik berdasarkan endpoint slug.",
@@ -845,7 +845,7 @@ export const swaggerSpec = {
             },
         },
 
-        "/komik/genre/{endpoint}": {
+        "/komik/genres/{endpoint}": {
             get: {
                 summary: "Get manga by genre",
                 tags: ["Komik"],

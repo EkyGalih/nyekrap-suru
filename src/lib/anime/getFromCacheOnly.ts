@@ -11,8 +11,6 @@ export async function getFromCacheOnly<T>(cacheKey: string): Promise<T | null> {
     })
 
     if (!cache) return null
-    if (cache.expiresAt <= now) return null
-
     console.log("✅ DB CACHE HIT:", cacheKey)
     return cache.data as T
 }
