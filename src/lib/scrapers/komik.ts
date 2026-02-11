@@ -1,6 +1,18 @@
 
-import { GenreItem } from "@/app/types/anime/anime"
-import { ChapterResult, DaftarResult, GenreResult, KomikuChapter, KomikuDetail, KomikuGenre, KomikuHotItem, KomikUpdatedItem, KomikuSearchItem, KomikuSearchResult, MangaItem } from "@/app/types/komik/manga"
+import {
+    ChapterResult,
+    GenreItem,
+    DaftarResult,
+    GenreResult,
+    KomikuChapter,
+    KomikuDetail,
+    KomikuGenre,
+    KomikuHotItem,
+    KomikUpdatedItem,
+    KomikuSearchItem,
+    KomikuSearchResult,
+    MangaItem
+} from "@/app/types/komik/manga"
 import * as cheerio from "cheerio"
 
 function parseViewers(text: string | null): number | null {
@@ -485,11 +497,8 @@ export function scrapeDetailGenre(html: string): GenreResult {
         const link = $(el).find(".bgei a").attr("href") || ""
 
         const endpoint = link
-            ? link
-                .replace("https://komiku.org/manga/", "")
-                .replace("https://komiku.org/", "")
-                .replace(/\/$/, "")
-            : null
+            .replace("https://komiku.org/manga/", "")
+            .replace(/\//g, "")
 
         const thumbnail = $(el).find(".bgei img").attr("src") || null
 
