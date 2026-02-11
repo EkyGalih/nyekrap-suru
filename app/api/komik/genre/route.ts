@@ -16,7 +16,7 @@ export const GET = withAuth(async () => {
 
     return NextResponse.json({
         message: "success",
-        total: data.length,
+        total: (data as any[]).length,
         data,
     })
 })
