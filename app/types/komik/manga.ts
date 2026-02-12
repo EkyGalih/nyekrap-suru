@@ -46,6 +46,7 @@ export interface ChapterResult {
     images: string[]
     next_chapter: string | null
     prev_chapter: string | null
+    manga_endpoint: string | null
 }
 
 export interface MangaItem {

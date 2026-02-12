@@ -230,81 +230,133 @@ export async function scrapeKomikuChapter(
     endpoint: string,
     baseUrl: string
 ): Promise<ChapterResult> {
-    const url = `${baseUrl}/${endpoint}`
 
-    const response = await fetch(url, {
-        headers: {
-            "User-Agent": "Mozilla/5.0",
-        },
-        cache: "no-store",
-    })
-
-    if (!response.ok) {
-        throw new Error("Failed to fetch chapter page")
-    }
-
-    const html = await response.text()
-    const $ = cheerio.load(html)
+    const url = `${baseUrl.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}/`
 
     // ======================
-    // TITLE
+    // RANDOM JITTER (lebih natural)
     // ======================
-    const title = $("#Judul h1").text().trim() || null
-
-    const titleComic =
-        $("#Judul a[rel='tag']").first().text().trim() || null
+    const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
+    await sleep(800 + Math.random() * 1800) // 0.8–2.6 detik
 
     // ======================
-    // IMAGES
+    // RETRY CONFIG
     // ======================
-    const images: string[] = []
+    const MAX_RETRY = 3
+    let lastError: any = null
 
-    $("#Baca_Komik img").each((_, el) => {
-        const src = $(el).attr("src")
-        if (src && src.includes("img.komiku.org")) {
-            images.push(src)
+    for (let attempt = 1; attempt <= MAX_RETRY; attempt++) {
+
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    "User-Agent":
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+                    "Accept":
+                        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+                    "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+                    "Referer": baseUrl,
+                    "Cache-Control": "no-cache",
+                    "Pragma": "no-cache",
+                    "Upgrade-Insecure-Requests": "1",
+                    "Sec-Fetch-Dest": "document",
+                    "Sec-Fetch-Mode": "navigate",
+                    "Sec-Fetch-Site": "same-origin",
+                    "Sec-Fetch-User": "?1",
+                },
+                redirect: "follow",
+            })
+
+            if (!response.ok) {
+                throw new Error(`Upstream ${response.status}`)
+            }
+
+            const html = await response.text()
+            const $ = cheerio.load(html)
+
+            // ======================
+            // TITLE
+            // ======================
+            const title = $("#Judul h1").text().trim() || null
+            const titleComic =
+                $("#Judul a[rel='tag']").first().text().trim() || null
+
+            // ======================
+            // IMAGES
+            // ======================
+            const images: string[] = []
+
+            $("#Baca_Komik img").each((_, el) => {
+                const src = $(el).attr("src")
+                if (src && src.includes("img.komiku.org")) {
+                    images.push(src)
+                }
+            })
+
+            // ======================
+            // META
+            // ======================
+            const chapterInfo = $(".chapterInfo")
+            const chapterNumber =
+                chapterInfo.attr("valuechapter") ?? null
+            const totalPages =
+                chapterInfo.attr("valuegambar") ?? images.length
+
+            // ======================
+            // NAVIGATION (Final Stable Version)
+            // ======================
+
+            let prevHref: string | null = null
+            let nextHref: string | null = null
+            let mangaHref: string | null = null
+
+            // ✅ Manga list selalu ada
+            mangaHref = $('a[aria-label="List"]').attr("href") ?? null
+
+            // ✅ Prev (kalau ada)
+            prevHref = $('a[aria-label="Prev"]').attr("href") ?? null
+
+            // ✅ Next (kalau ada)
+            nextHref = $('a[aria-label="Next"]').attr("href") ?? null
+
+            // ✅ Fallback: nextch div (kadang ada)
+            if (!nextHref) {
+                nextHref = $(".nextch").attr("data") ?? null
+            }
+
+            const clean = (link: string | null) =>
+                link
+                    ? link
+                        .replace(baseUrl, "")
+                        .replace(/^\/|\/$/g, "")
+                    : null
+
+            return {
+                endpoint,
+                title,
+                title_comic: titleComic,
+                chapter_number: chapterNumber,
+                total_images: images.length,
+                total_pages: totalPages,
+                images,
+                next_chapter: clean(nextHref),
+                prev_chapter: clean(prevHref),
+                manga_endpoint: clean(mangaHref),
+            }
+
+        } catch (err: any) {
+
+            lastError = err
+
+            // Exponential backoff
+            const backoff = 1000 * Math.pow(2, attempt)
+            await sleep(backoff)
+
+            continue
         }
-    })
-
-    // ======================
-    // META
-    // ======================
-    const chapterInfo = $(".chapterInfo")
-
-    const chapterNumber =
-        chapterInfo.attr("valuechapter") ?? null
-
-    const totalPages =
-        chapterInfo.attr("valuegambar") ?? images.length
-
-    // ======================
-    // NAVIGATION
-    // ======================
-    const nextHref = $(".nxpr a.rl").attr("href") ?? null
-    const prevHref =
-        $(".nxpr a")
-            .not(".rl")
-            .first()
-            .attr("href") ?? null
-
-    const clean = (link: string | null) =>
-        link
-            ? link
-                .replace(baseUrl, "")
-                .replace(/^\/|\/$/g, "")
-            : null
-
-    return {
-        endpoint,
-        title,
-        title_comic: titleComic,
-        chapter_number: chapterNumber,
-        total_images: images.length,
-        total_pages: totalPages,
-        images,
-        next_chapter: clean(nextHref),
-        prev_chapter: clean(prevHref),
     }
+
+    throw new Error(`Failed after retries: ${lastError?.message || "unknown error"}`)
 }
 
 export function scrapeKomikuDaftar(html: string): DaftarResult {
