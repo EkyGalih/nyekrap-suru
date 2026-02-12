@@ -1,10 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 
-/**
- * Wrapper untuk proteksi API menggunakan x-api-key
- * - Semua /api/cron/* DIIZINKAN tanpa auth
- * - Selain itu wajib x-api-key
- */
+const allowedOrigins = new Set([
+  "http://localhost:3001",
+  "https://tamanto.web.id",
+]);
+
+function applyCors(req: NextRequest, res: NextResponse) {
+  const origin = req.headers.get("origin");
+
+  if (origin && allowedOrigins.has(origin)) {
+    res.headers.set("Access-Control-Allow-Origin", origin);
+    res.headers.set("Access-Control-Allow-Methods", "GET,OPTIONS");
+    res.headers.set("Access-Control-Allow-Headers", "Content-Type, x-api-key");
+    res.headers.set("Vary", "Origin");
+  }
+
+  return res;
+}
+
 export function withAuth(
   handler: (req: NextRequest, context?: any) => Promise<NextResponse>
 ) {
@@ -13,24 +26,27 @@ export function withAuth(
 
     // ✅ BYPASS AUTH UNTUK CRON
     if (pathname.startsWith("/api/cron")) {
-      return handler(req, context);
+      const response = await handler(req, context);
+      return applyCors(req, response);
     }
 
     const apiKey = req.headers.get("x-api-key");
 
-    // ❌ Jika API Key tidak dikirim atau salah
     if (!apiKey || apiKey !== process.env.API_KEY) {
-      return NextResponse.json(
-        {
-          message: "Unauthorized",
-          error:
-            "Endpoint ini membutuhkan API Key. Jika belum punya, silakan hubungi admin (atau traktir kopi dulu 😄).",
-        },
-        { status: 401 }
+      return applyCors(
+        req,
+        NextResponse.json(
+          {
+            message: "Unauthorized",
+            error:
+              "Endpoint ini membutuhkan API Key. Jika belum punya, silakan hubungi admin 😄",
+          },
+          { status: 401 }
+        )
       );
     }
 
-    // ✅ Jika valid → lanjut handler asli
-    return handler(req, context);
+    const response = await handler(req, context);
+    return applyCors(req, response);
   };
 }

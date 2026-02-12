@@ -7,15 +7,12 @@ import { fetchHTMLAnime } from "@/src/lib/fetchHtmlAnime"
 
 export const runtime = "nodejs"
 
-// TTL settings
-const CACHE_TTL = 60 * 60        // 1 jam
-const FAIL_TTL = 60 * 5          // 5 menit
+const CACHE_TTL = 60 * 60 // 1 jam
 
 export const GET = withAuth(
   async (_req, { params }: { params: Promise<{ slug: string }> }) => {
     try {
       const { slug } = await params
-
       if (!slug) {
         return NextResponse.json(
           { message: "error", error: "Slug wajib ada" },
@@ -24,20 +21,7 @@ export const GET = withAuth(
       }
 
       const normalizedSlug = slug.trim().toLowerCase()
-
       const cacheKey = `anime:streaming:${normalizedSlug}`
-      const failKey = `anime:streaming:fail:${normalizedSlug}`
-
-      /* ===============================
-         🚫 NEGATIVE CACHE CHECK
-      =============================== */
-      const failedRecently = await redis.get(failKey)
-      if (failedRecently) {
-        return NextResponse.json(
-          { message: "streaming temporarily unavailable" },
-          { status: 503 }
-        )
-      }
 
       /* ===============================
          ⚡ CACHE HIT
@@ -50,29 +34,34 @@ export const GET = withAuth(
         })
       }
 
-      /* ===============================
-         🌐 FETCH HTML
-      =============================== */
       const url = `${process.env.OTAKUDESU_URL}/episode/${normalizedSlug}/`
-      const html = await fetchHTMLAnime(url)
 
       /* ===============================
-         🧠 SCRAPE
+         🔁 SCRAPE WITH RETRY
       =============================== */
-      const result = scrapeOtakudesuEpisode(html)
+      let result: any = null
 
-      // ❌ jangan cache kalau iframe kosong
-      if (!result.streaming_iframe) {
-        await redis.set(failKey, true, { ex: FAIL_TTL })
-        throw new Error("Iframe streaming tidak ditemukan")
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const html = await fetchHTMLAnime(url)
+        result = scrapeOtakudesuEpisode(html)
+
+        if (result?.streaming_iframe) break
+
+        // delay sebelum retry
+        await new Promise(r => setTimeout(r, 800))
+      }
+
+      if (!result?.streaming_iframe) {
+        return NextResponse.json(
+          { message: "streaming unavailable" },
+          { status: 503 }
+        )
       }
 
       /* ===============================
          💾 SAVE CACHE
       =============================== */
-      await redis.set(cacheKey, result, {
-        ex: CACHE_TTL,
-      })
+      await redis.set(cacheKey, result, { ex: CACHE_TTL })
 
       return NextResponse.json({
         message: "success",
