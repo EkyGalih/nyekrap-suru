@@ -28,5 +28,5 @@ export async function GET(req: Request) {
         },
     })
 
-    return NextResponse.json({ message: "cron ok", data })
+    return NextResponse.json({ message: "cron ok" })
 }

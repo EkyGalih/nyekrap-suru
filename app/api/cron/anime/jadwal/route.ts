@@ -20,7 +20,6 @@ export async function GET() {
     })
 
     return NextResponse.json({
-        message: "cron ok",
-        data,
+        message: "cron ok"
     })
 }

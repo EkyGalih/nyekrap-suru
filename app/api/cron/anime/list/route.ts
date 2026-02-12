@@ -20,7 +20,6 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
         message: "cron ok",
-        count: Array.isArray(data) ? data.length : undefined,
-        data,
+        count: Array.isArray(data) ? data.length : undefined
     })
 }
