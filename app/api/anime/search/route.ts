@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
 import { withAuth } from "@/src/lib/withAuth"
-import { proxyFetchHTML } from "@/src/lib/proxyFetch"
 import { redis } from "@/src/lib/redisCache"
 import { scrapeAnimeSearch } from "@/src/lib/scrapers/anime"
+import { fetchHTMLAnime } from "@/src/lib/fetchHtmlAnime"
 
 export const runtime = "nodejs"
 
@@ -31,7 +31,7 @@ export const GET = withAuth(async (req) => {
     const targetUrl =
         `${process.env.OTAKUDESU_URL}/?s=${encodeURIComponent(q)}&post_type=anime`
 
-    const html = await proxyFetchHTML(targetUrl)
+    const html = await fetchHTMLAnime(targetUrl)
     const result = scrapeAnimeSearch(html, q)
 
     // ✅ TTL 3 jam

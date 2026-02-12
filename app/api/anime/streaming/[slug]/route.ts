@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server"
 import { withAuth } from "@/src/lib/withAuth"
-import { proxyFetchHTML } from "@/src/lib/proxyFetch"
 import { redis } from "@/src/lib/redisCache"
 import { scrapeOtakudesuEpisode } from "@/src/lib/scrapers/anime"
 import { getErrorMessage } from "@/src/lib/getErrorMessage"
+import { fetchHTMLAnime } from "@/src/lib/fetchHtmlAnime"
 
 export const runtime = "nodejs"
 
@@ -54,7 +54,7 @@ export const GET = withAuth(
          🌐 FETCH HTML
       =============================== */
       const url = `${process.env.OTAKUDESU_URL}/episode/${normalizedSlug}/`
-      const html = await proxyFetchHTML(url)
+      const html = await fetchHTMLAnime(url)
 
       /* ===============================
          🧠 SCRAPE

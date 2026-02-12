@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getOrScrape } from "@/src/lib/anime/getOrScrape"
-import { proxyFetchHTML } from "@/src/lib/proxyFetch"
 import { scrapeAnimeList } from "@/src/lib/scrapers/anime"
+import { fetchHTMLAnime } from "@/src/lib/fetchHtmlAnime"
 
 export const runtime = "nodejs"
 
@@ -13,7 +13,7 @@ export async function GET(req: Request) {
         allowStaleOnError: true,
         scraper: async () => {
             const url = `${process.env.OTAKUDESU_URL}/anime-list/`
-            const html = await proxyFetchHTML(url)
+            const html = await fetchHTMLAnime(url)
             return scrapeAnimeList(html)
         },
     })

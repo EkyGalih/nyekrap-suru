@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getOrScrape } from "@/src/lib/anime/getOrScrape"
-import { proxyFetchHTML } from "@/src/lib/proxyFetch"
 import { scrapeOtakudesuHome } from "@/src/lib/scrapers/anime"
+import { fetchHTMLAnime } from "@/src/lib/fetchHtmlAnime"
 
 export const runtime = "nodejs"
 
@@ -20,7 +20,7 @@ export async function GET(req: Request) {
         endpoint: "/",
         ttl: 60 * 60 * 24,
         scraper: async () => {
-            const html = await proxyFetchHTML(process.env.OTAKUDESU_URL!)
+            const html = await fetchHTMLAnime(process.env.OTAKUDESU_URL!)
             return scrapeOtakudesuHome(html)
         }
     })
