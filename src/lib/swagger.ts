@@ -73,14 +73,14 @@ export const swaggerSpec = {
        SERVERS
     =============================== */
     servers: [
+        // {
+        //     url: "http://localhost:3000/api",
+        //     description: "Server Lokal (Development)",
+        // },
         {
-            url: "http://localhost:3000/api",
-            description: "Server Lokal (Development)",
+            url: "https://www.mytools.web.id/api",
+            description: "Server Production",
         },
-    // {
-    //     url: "https://www.mytools.web.id/api",
-    //     description: "Server Production",
-    // },
     ],
 
     /* ===============================
