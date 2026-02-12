@@ -440,10 +440,13 @@ export function scrapeKomikuSearch(html: string): KomikuSearchResult {
     $(".bge").each((_, el) => {
         const title = $(el).find(".kan h3").text().trim()
 
-        const link = $(el).find(".kan h3 a").attr("href") || ""
+        const anchor = $(el).find(".kan > a").first()
+
+        const link = anchor.attr("href") || ""
+
         const endpoint = link
-            .replace("/manga/", "")
-            .replace(/\//g, "")
+            .replace(/^\/manga\//, "")
+            .replace(/\/$/, "")
 
         const thumbnail =
             $(el).find(".bgei img").attr("src") || null
