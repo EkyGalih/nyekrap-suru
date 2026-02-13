@@ -3,6 +3,7 @@ import { withAuth } from "@/src/lib/withAuth";
 import { proxyFetchHTML } from "@/src/lib/proxyFetch";
 import { scrapeDetailAllType } from "@/src/lib/scrapers/drakorkita";
 import { getCache, setCache } from "@/src/lib/redisCache";
+import { fetchHTMLAnime } from "@/src/lib/fetchHtmlAnime";
 
 export const runtime = "nodejs";
 
@@ -45,7 +46,7 @@ export const GET = withAuth(
                2. FETCH HTML VIA PROXY
             =============================== */
             const url = `${process.env.DRAKORKITA_URL}/detail/${endpoint}`;
-            const html = await proxyFetchHTML(url);
+            const html = await fetchHTMLAnime(url);
 
             if (!html || html.length < 500) {
                 throw new Error("HTML kosong / gagal fetch detail page");

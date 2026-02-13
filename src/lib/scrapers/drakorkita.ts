@@ -704,18 +704,6 @@ export async function scrapeDetailAllType(
     =============================== */
 
     const episodes: EpisodeItem[] = episodeElements.map((el, index) => {
-        const wrap = $eps(el).attr("onclick")
-
-        if (!wrap) {
-            return {
-                title: `Episode ${index + 1}`,
-                episode_id: "unknown",
-                tag: "tv",
-                resolutions: [],
-            }
-        }
-
-        const inside = wrap.substring(wrap.indexOf("(") + 1, wrap.indexOf(")"))
 
         const epsId = inside.split(",")[0].replace(/'/g, "").trim()
         const epsTag = inside.split(",")[1].replace(/'/g, "").trim() // ✅ INI PENTING
