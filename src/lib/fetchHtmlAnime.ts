@@ -17,7 +17,12 @@ export async function fetchHTMLAnime(url: string) {
             },
         })
 
-        if (!res.ok) throw new Error("Bad status")
+        if (!res.ok) {
+            const body = await res.text().catch(() => "")
+            console.log("SCRAPE STATUS:", res.status)
+            console.log("SCRAPE BODY:", body.slice(0, 300))
+            throw new Error(`Fetch gagal: ${res.status}`)
+        }
 
         return await res.text()
     } catch (err) {
