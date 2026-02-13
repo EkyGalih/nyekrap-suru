@@ -1,44 +1,48 @@
 export async function proxyFetchHTML(targetUrl: string): Promise<string> {
-  const apiKey = process.env.SCRAPERAPI_KEY
-  if (!apiKey) throw new Error("SCRAPERAPI_KEY belum diset di ENV")
+  const keysRaw = process.env.SCRAPERAPI_KEY
+  if (!keysRaw) throw new Error("SCRAPERAPI_KEY belum diset")
 
-  const build = (extra: string) =>
-    `https://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(targetUrl)}${extra}`
+  const keys = keysRaw.split(",").map(k => k.trim()).filter(Boolean)
 
-  const variants = [
-    { name: "standard", url: build("") },
-    { name: "premium", url: build("&premium=true") },
-  ]
-
-  let lastStatus: number | null = null
-  let lastBody = ""
-
-  for (const v of variants) {
-    console.log("⚡ SCRAPERAPI FETCH:", v.name, v.url)
-
-    const res = await fetch(v.url, { cache: "no-store" })
-    lastStatus = res.status
-    lastBody = await res.text()
-
-    if (res.ok) {
-      if (!lastBody || lastBody.length < 200) {
-        throw new Error(`HTML kosong dari ScraperAPI (${v.name})`)
-      }
-      return lastBody
-    }
-
-    const bodyLower = (lastBody || "").toLowerCase()
-
-    // Kalau ini kasus protected domains, lanjut coba premium
-    const looksProtected =
-      bodyLower.includes("protected domains") ||
-      bodyLower.includes("premium=true") ||
-      bodyLower.includes("ultra_premium=true")
-
-    // kalau bukan kasus protected, jangan buang waktu coba premium
-    if (!looksProtected) break
+  if (keys.length === 0) {
+    throw new Error("Tidak ada API key tersedia")
   }
 
-  const snippet = (lastBody || "").slice(0, 400)
-  throw new Error(`ScraperAPI gagal: ${lastStatus}. body: ${snippet}`)
+  let lastError: any = null
+
+  for (const apiKey of keys) {
+    const build = (extra: string) =>
+      `https://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(targetUrl)}${extra}`
+
+    const variants = [
+      { name: "standard", url: build("") },
+      { name: "premium", url: build("&premium=true") },
+    ]
+
+    for (const v of variants) {
+      try {
+        console.log(`🔄 SCRAPERAPI [${apiKey.slice(0, 6)}...] → ${v.name}`)
+
+        const res = await fetch(v.url, { cache: "no-store" })
+
+        const body = await res.text()
+
+        if (res.ok && body && body.length > 200) {
+          return body
+        }
+
+        // kalau quota habis atau unauthorized
+        if (res.status === 401 || res.status === 403 || res.status === 429) {
+          console.log(`⚠️ Key bermasalah: ${apiKey.slice(0, 6)}...`)
+          break // pindah ke key berikutnya
+        }
+
+        lastError = new Error(`Status ${res.status}`)
+      } catch (err) {
+        lastError = err
+      }
+    }
+  }
+
+  throw new Error(`Semua ScraperAPI key gagal. Last error: ${lastError}`)
 }

@@ -3,7 +3,7 @@ import { withAuth } from "@/src/lib/withAuth"
 import { redis } from "@/src/lib/redisCache"
 import { scrapeOtakudesuEpisode } from "@/src/lib/scrapers/anime"
 import { getErrorMessage } from "@/src/lib/getErrorMessage"
-import { fetchHTMLAnime } from "@/src/lib/fetchHtmlAnime"
+import { proxyFetchHTML } from "@/src/lib/proxyFetch"
 
 export const runtime = "nodejs"
 
@@ -42,7 +42,7 @@ export const GET = withAuth(
       let result: any = null
 
       for (let attempt = 0; attempt < 2; attempt++) {
-        const html = await fetchHTMLAnime(url)
+        const html = await proxyFetchHTML(url)
         result = scrapeOtakudesuEpisode(html)
 
         if (result?.streaming_iframe) break
