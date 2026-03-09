@@ -46,7 +46,7 @@ export const GET = withAuth(
                2. FETCH HTML VIA PROXY
             =============================== */
             const url = `${process.env.DRAKORKITA_URL}/detail/${endpoint}`;
-            const html = await fetchHTMLAnime(url);
+            const html = await proxyFetchHTML(url);
 
             if (!html || html.length < 500) {
                 throw new Error("HTML kosong / gagal fetch detail page");

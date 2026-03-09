@@ -7,7 +7,6 @@ import {
     DrakorDetailResult,
     DrakorStar,
     EpisodeItem,
-    EpisodeResolution,
     GenreDetailCard,
     GenreDetailResult,
     GenreItem,
@@ -704,16 +703,15 @@ export async function scrapeDetailAllType(
     =============================== */
 
     const episodes: EpisodeItem[] = episodeElements.map((el, index) => {
-
-        const epsId = inside.split(",")[0].replace(/'/g, "").trim()
-        const epsTag = inside.split(",")[1].replace(/'/g, "").trim() // ✅ INI PENTING
+        const epsId = $eps(el).attr("data-epid") || "unknown"   // ✅ ini yang benar
+        const epsTag = $eps(el).attr("data-tag") || "tv"
 
         const episodeTitle = $eps(el).text().trim() || `Episode ${index + 1}`
 
         return {
             title: episodeTitle,
             episode_id: epsId,
-            tag: epsTag, // ✅ simpan tag benernya
+            tag: epsTag,
             resolutions: [],
         }
     })

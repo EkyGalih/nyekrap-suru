@@ -73,14 +73,14 @@ export const swaggerSpec = {
        SERVERS
     =============================== */
     servers: [
+        {
+            url: "http://localhost:3000/api",
+            description: "Server Lokal (Development)",
+        },
         // {
-        //     url: "http://localhost:3000/api",
-        //     description: "Server Lokal (Development)",
+        //     url: "https://www.mytools.web.id/api",
+        //     description: "Server Production",
         // },
-    {
-        url: "https://www.mytools.web.id/api",
-        description: "Server Production",
-    },
     ],
 
     /* ===============================
@@ -98,6 +98,10 @@ export const swaggerSpec = {
         {
             name: "Komik",
             description: "Endpoint scraping komik manga, manhwa dan manhua",
+        },
+        {
+            name: "News",
+            description: "Endpoint scraping berita terbaru dari rinjaninationalpark.id",
         },
     ],
 
@@ -886,6 +890,63 @@ export const swaggerSpec = {
                     }
                 }
             }
-        }
+        },
+
+        "/news/list": {
+            get: {
+                tags: ["News"],
+                summary: "Ambil Berita Terbaru TNGR",
+                description: "Mengambil daftar berita terbaru dari website resmi Taman Nasional Gunung Rinjani yang sudah di-cache.",
+                responses: {
+                    200: {
+                        description: "Berhasil mengambil daftar berita",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        message: { type: "string", example: "success" },
+                                        data: {
+                                            type: "array",
+                                            items: { $ref: "#/components/schemas/NewsItem" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    503: {
+                        description: "Cache kosong atau expired"
+                    }
+                }
+            }
+        },
+
+        "/news/{endpoint}": {
+            get: {
+                tags: ["News"],
+                summary: "Ambil Detail Berita TNGR",
+                description: "Mengambil konten lengkap berita berdasarkan slug endpoint.",
+                parameters: [
+                    {
+                        name: "endpoint",
+                        in: "path",
+                        required: true,
+                        schema: {
+                            type: "string",
+                            example: "agenda-rinjani-musim-pendakian-2026"
+                        }
+                    }
+                ],
+                responses: {
+                    200: {
+                        description: "Berhasil mengambil detail berita"
+                    },
+                    404: {
+                        description: "Berita tidak ditemukan"
+                    }
+                }
+            }
+        },
     },
 };

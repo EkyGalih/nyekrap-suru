@@ -16,3 +16,29 @@ model ScrapeCache {
 
   @@index([endpoint])
 }
+
+model Order {
+  id          String   @id @default(cuid())
+  telegramId  String
+  packageId   String   
+  amount      Int      
+  status      String   @default("PENDING")
+  imageHash   String?  @unique
+  createdAt   DateTime @default(now())
+}
+
+model Token {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  packageId   String
+  devices     Device[]
+  expiryDate  DateTime
+  createdAt   DateTime @default(now())
+}
+
+model Device {
+  id        String   @id @default(cuid())
+  deviceId  String   @unique
+  tokenId   String
+  token     Token    @relation(fields: [tokenId], references: [id])
+}
